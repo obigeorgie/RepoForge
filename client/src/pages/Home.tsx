@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { RepoCard } from "@/components/RepoCard";
 import { getTrendingRepos } from "@/lib/github";
+import { bookmarkRepo } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
@@ -9,6 +11,7 @@ import { Loader2 } from "lucide-react";
 const languages = ["All", "JavaScript", "TypeScript", "Python", "Rust", "Go"];
 
 export function Home() {
+  const { toast } = useToast();
   const [selectedLanguage, setSelectedLanguage] = useState("All");
 
   const { data: repos, isLoading } = useQuery({
@@ -47,8 +50,20 @@ export function Home() {
             <RepoCard
               key={repo.name}
               repo={repo}
-              onBookmark={() => {
-                // TODO: Implement bookmarking
+              onBookmark={async () => {
+                try {
+                  await bookmarkRepo(repo.id.toString());
+                  toast({
+                    title: "Repository bookmarked",
+                    description: "You can find it in your profile",
+                  });
+                } catch (error) {
+                  toast({
+                    title: "Failed to bookmark repository",
+                    description: error instanceof Error ? error.message : "Please try again",
+                    variant: "destructive",
+                  });
+                }
               }}
             />
           ))}
