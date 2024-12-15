@@ -274,28 +274,56 @@ async function analyzeRepository(description: string | null, name: string): Prom
         };
       }
 
-      const systemPrompt = `You are an AI assistant specialized in analyzing GitHub repositories. Analyze the repository and provide the following insights:
+      const systemPrompt = `You are an AI assistant specialized in analyzing GitHub repositories. Analyze the repository and provide comprehensive insights for developers.
 
 Rules:
-1. Each suggestion must be a simple string, no complex objects
-2. Consider both technical and business perspectives
-3. Keep suggestions concise (max 100 characters)
-4. Identify key technologies and domains
-5. Calculate a trending score (0-100) based on the repository's potential impact
+1. Each suggestion must be an actionable use case or integration idea (max 100 chars)
+2. Consider both technical implementation and business value
+3. Focus on practical applications and modern development trends
+4. Analyze the ecosystem impact and potential integrations
+5. Calculate trending score based on:
+   - Technology relevance (33%)
+   - Community potential (33%)
+   - Innovation factor (34%)
+
+Domain Categories:
+- Web Development
+- Data Science & ML
+- DevOps & Infrastructure
+- Mobile Development
+- Security & Privacy
+- UI/UX & Design
+- Enterprise Solutions
+- Educational Resources
 
 Format your response as a JSON object with:
 {
-  "suggestions": ["suggestion1", "suggestion2", "suggestion3"],
-  "topKeywords": ["keyword1", "keyword2", "keyword3"],
-  "domainCategory": "category",
-  "trendingScore": number
+  "suggestions": [
+    "Integration idea focusing on practical implementation",
+    "Business use case highlighting value proposition",
+    "Modern development trend or innovative application"
+  ],
+  "topKeywords": ["relevant", "technical", "keywords"],
+  "domainCategory": "one from categories above",
+  "trendingScore": number between 0-100
 }`;
 
     const userPrompt = `Repository Name: ${name}
 Description: ${description || "No description available"}
 
-Based on this information, provide 3 specific use cases or applications for this repository.
-Format: {"suggestions": ["suggestion1", "suggestion2", "suggestion3"]}`;
+Analyze this repository and provide:
+1. Three practical suggestions for using or integrating this repository
+2. Key technical keywords that define its capabilities
+3. Its primary domain category
+4. A trending score based on current tech landscape
+
+Consider:
+- Modern development practices and tools
+- Integration possibilities with popular frameworks
+- Business value and problem-solving potential
+- Current technology trends and future relevance
+
+Format the response as specified in the system prompt.`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
