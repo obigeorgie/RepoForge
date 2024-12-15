@@ -4,16 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Star, GitFork, Users, BookmarkPlus, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
 
+import type { Repository } from "@/lib/github";
+
 interface RepoCardProps {
-  repo: {
-    name: string;
-    description: string;
-    stars: number;
-    forks: number;
-    language: string;
-    url: string;
-    aiSuggestions?: string[];
-  };
+  repo: Repository;
   onBookmark?: () => void;
 }
 

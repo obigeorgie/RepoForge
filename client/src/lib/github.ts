@@ -7,6 +7,13 @@ export interface Repository {
   language: string;
   url: string;
   aiSuggestions?: string[];
+  aiAnalysis?: {
+    suggestions: string[];
+    analyzedAt: string;
+    topKeywords?: string[];
+    domainCategory?: string;
+    trendingScore?: number;
+  };
 }
 
 export async function getTrendingRepos(
