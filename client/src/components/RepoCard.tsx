@@ -56,7 +56,7 @@ export function RepoCard({ repo, onBookmark }: RepoCardProps) {
               <ul className="space-y-1">
                 {repo.aiSuggestions.map((suggestion, i) => (
                   <li key={i} className="text-sm text-gray-400 leading-relaxed">
-                    • {suggestion}
+                    • {typeof suggestion === 'string' ? suggestion : ''}
                   </li>
                 ))}
               </ul>

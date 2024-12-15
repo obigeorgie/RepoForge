@@ -254,10 +254,18 @@ export function registerRoutes(app: Express) {
 
 async function analyzeRepository(description: string | null, name: string): Promise<{ suggestions: string[], analyzedAt: string }> {
   try {
-    const systemPrompt = `You are an AI assistant specialized in analyzing GitHub repositories and identifying their potential applications and use cases. Your goal is to suggest innovative and practical ways the repository could be used in real-world scenarios.
+      // If both name and description are missing, return empty suggestions
+      if (!name) {
+        return {
+          suggestions: [],
+          analyzedAt: new Date().toISOString()
+        };
+      }
+
+      const systemPrompt = `You are an AI assistant specialized in analyzing GitHub repositories and identifying their potential applications and use cases. Your goal is to suggest innovative and practical ways the repository could be used in real-world scenarios.
 
 Rules:
-1. Each suggestion should be specific, actionable, and highlight unique value propositions
+1. Each suggestion must be a simple string, no complex objects
 2. Consider both technical and business perspectives
 3. Keep suggestions concise (max 100 characters)
 4. Focus on practical applications that could be implemented immediately
@@ -266,7 +274,7 @@ Rules:
 Format your response as a JSON object with a 'suggestions' array containing exactly 3 strings.`;
 
     const userPrompt = `Repository Name: ${name}
-Description: ${description}
+Description: ${description || "No description available"}
 
 Based on this information, provide 3 specific use cases or applications for this repository.
 Format: {"suggestions": ["suggestion1", "suggestion2", "suggestion3"]}`;
