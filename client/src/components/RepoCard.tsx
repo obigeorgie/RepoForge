@@ -81,9 +81,9 @@ export function RepoCard({ repo, onBookmark }: RepoCardProps) {
                         {['🎯', '🚀', '💡'][i]}
                       </span>
                       <span className="group-hover/item:translate-x-1 transition-transform duration-300">
-                        {typeof suggestion === 'string' 
-                          ? suggestion 
-                          : suggestion.description || suggestion.use_case || 'No suggestion available'}
+                        {typeof suggestion === 'string'
+                           ? suggestion
+                           : (suggestion.description || suggestion.useCase || 'No suggestion available')}
                       </span>
                     </li>
                   ))}
