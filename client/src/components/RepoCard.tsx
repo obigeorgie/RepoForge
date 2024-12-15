@@ -50,12 +50,14 @@ export function RepoCard({ repo, onBookmark }: RepoCardProps) {
         <CardContent>
           <p className="text-gray-400">{repo.description}</p>
           
-          {repo.aiSuggestions && repo.aiSuggestions.length > 0 && (
+          {repo.aiSuggestions && Array.isArray(repo.aiSuggestions) && repo.aiSuggestions.length > 0 && (
             <div className="mt-4">
               <h4 className="text-sm font-medium text-primary mb-2">AI Suggestions</h4>
               <ul className="space-y-1">
                 {repo.aiSuggestions.map((suggestion, i) => (
-                  <li key={i} className="text-sm text-gray-400">• {typeof suggestion === 'string' ? suggestion : ''}</li>
+                  <li key={i} className="text-sm text-gray-400 leading-relaxed">
+                    • {suggestion}
+                  </li>
                 ))}
               </ul>
             </div>

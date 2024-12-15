@@ -10,6 +10,9 @@ import passport from "passport";
 import { Strategy as GitHubStrategy } from "passport-github2";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
+if (!process.env.OPENAI_API_KEY) {
+  throw new Error("OPENAI_API_KEY environment variable is required");
+}
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 declare module "express-session" {
@@ -149,7 +152,7 @@ export function registerRoutes(app: Express) {
         });
 
         if (!repo) {
-          const aiAnalysis = await analyzeRepository(item.description || "", item.name);
+          const aiAnalysis = await analyzeRepository(item.description, item.full_name);
           
           const [newRepo] = await db
             .insert(repositories)
@@ -161,7 +164,10 @@ export function registerRoutes(app: Express) {
               stars: item.stargazers_count,
               forks: item.forks_count,
               url: item.html_url,
-              aiAnalysis,
+              aiAnalysis: {
+                suggestions: aiAnalysis.suggestions,
+                analyzedAt: aiAnalysis.analyzedAt
+              },
             })
             .returning();
           
@@ -246,7 +252,7 @@ export function registerRoutes(app: Express) {
   return httpServer;
 }
 
-async function analyzeRepository(description: string, name: string) {
+async function analyzeRepository(description: string | null, name: string): Promise<{ suggestions: string[], analyzedAt: string }> {
   try {
     const systemPrompt = `You are an AI assistant specialized in analyzing GitHub repositories and identifying their potential applications and use cases. Your goal is to suggest innovative and practical ways the repository could be used in real-world scenarios.
 
