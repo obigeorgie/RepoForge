@@ -117,60 +117,23 @@ export function registerRoutes(app: Express) {
   // Get trending repositories
   app.get("/api/trending", async (req, res) => {
     try {
-      const { platform = 'github', language } = req.query;
-      let apiUrl: string;
-      let headers: Record<string, string> = {};
+      const { language } = req.query;
+      const url = new URL("https://api.github.com/search/repositories");
       
-      switch (platform) {
-        case 'github':
-          apiUrl = "https://api.github.com/search/repositories";
-          headers = {
-            "Accept": "application/vnd.github+json",
-            "Authorization": `token ${process.env.GITHUB_TOKEN}`,
-          };
-          break;
-        case 'gitlab':
-          apiUrl = "https://gitlab.com/api/v4/projects";
-          if (process.env.GITLAB_TOKEN) {
-            headers["Authorization"] = `Bearer ${process.env.GITLAB_TOKEN}`;
-          }
-          break;
-        case 'bitbucket':
-          apiUrl = "https://api.bitbucket.org/2.0/repositories";
-          if (process.env.BITBUCKET_TOKEN) {
-            headers["Authorization"] = `Bearer ${process.env.BITBUCKET_TOKEN}`;
-          }
-          break;
-        default:
-          return res.status(400).json({ message: "Unsupported platform" });
+      let q = "stars:>100";
+      if (language && language !== "All") {
+        q += ` language:${language}`;
       }
+      
+      url.searchParams.append("q", q);
+      url.searchParams.append("sort", "stars");
+      url.searchParams.append("order", "desc");
+      url.searchParams.append("per_page", "30");
 
-      const url = new URL(apiUrl);
-      
-      // Platform-specific query parameters
-      if (platform === 'github') {
-        let q = "stars:>100";
-        if (language && language !== "All") {
-          q += ` language:${language}`;
-        }
-        url.searchParams.append("q", q);
-        url.searchParams.append("sort", "stars");
-        url.searchParams.append("order", "desc");
-        url.searchParams.append("per_page", "30");
-      } else if (platform === 'gitlab') {
-        url.searchParams.append("order_by", "stars");
-        url.searchParams.append("sort", "desc");
-        if (language && language !== "All" && typeof language === "string") {
-          url.searchParams.append("with_programming_language", language);
-        }
-        url.searchParams.append("per_page", "30");
-      } else if (platform === 'bitbucket') {
-        if (language && language !== "All") {
-          url.searchParams.append("q", `language="${language}"`);
-        }
-        url.searchParams.append("sort", "-updated_on");
-        url.searchParams.append("pagelen", "30");
-      }
+      const headers = {
+        "Accept": "application/vnd.github+json",
+        "Authorization": `token ${process.env.GITHUB_TOKEN}`,
+      };
 
       const response = await fetch(url.toString(), { headers });
 
@@ -179,34 +142,15 @@ export function registerRoutes(app: Express) {
       }
 
       const data = await response.json();
-      console.log(`${platform} API Response:`, data);
       console.log('Processing repositories with AI analysis...');
       
-      // Normalize repository data based on platform
-      const items = platform === 'github' ? data.items : 
-                   platform === 'gitlab' ? data :
-                   platform === 'bitbucket' ? data.values : [];
-      
       // Process each repository
-      const repos = await Promise.all(items.map(async (item: any) => {
-        const platformId = platform === 'github' ? item.id.toString() :
-                         platform === 'gitlab' ? item.id.toString() :
-                         platform === 'bitbucket' ? item.uuid : '';
-                         
-        const repoName = platform === 'github' ? item.full_name :
-                        platform === 'gitlab' ? item.path_with_namespace :
-                        platform === 'bitbucket' ? item.full_name : '';
-        
-        console.log(`Processing repository: ${repoName}`);
+      const repos = await Promise.all(data.items.map(async (item: any) => {
+        console.log(`Processing repository: ${item.full_name}`);
         
         // Get or create repository in database
         let repo = await db.query.repositories.findFirst({
-          where: (repos) => {
-            return and(
-              eq(repos.platform, platform),
-              eq(repos.platformId, platformId)
-            );
-          },
+          where: eq(repositories.githubId, item.id.toString()),
         });
 
         if (!repo) {
@@ -221,22 +165,13 @@ export function registerRoutes(app: Express) {
           const [newRepo] = await db
             .insert(repositories)
             .values({
-              platform,
-              platformId,
-              name: repoName,
+              githubId: item.id.toString(),
+              name: item.full_name,
               description: item.description || '',
-              language: platform === 'github' ? item.language :
-                       platform === 'gitlab' ? item.language :
-                       platform === 'bitbucket' ? item.language : null,
-              stars: platform === 'github' ? item.stargazers_count :
-                    platform === 'gitlab' ? item.star_count :
-                    platform === 'bitbucket' ? item.watchers_count : 0,
-              forks: platform === 'github' ? item.forks_count :
-                    platform === 'gitlab' ? item.forks_count :
-                    platform === 'bitbucket' ? item.forks_count : 0,
-              url: platform === 'github' ? item.html_url :
-                  platform === 'gitlab' ? item.web_url :
-                  platform === 'bitbucket' ? item.links.html.href : '',
+              language: item.language,
+              stars: item.stargazers_count,
+              forks: item.forks_count,
+              url: item.html_url,
               aiAnalysis: {
                 suggestions: aiAnalysis.suggestions,
                 analyzedAt: aiAnalysis.analyzedAt,

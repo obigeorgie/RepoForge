@@ -13,32 +13,13 @@ export const users = pgTable("users", {
 
 export const repositories = pgTable("repositories", {
   id: serial("id").primaryKey(),
-  platform: text("platform").notNull(),
-  platformId: text("platform_id").notNull(),
+  githubId: text("github_id").unique().notNull(),
   name: text("name").notNull(),
   description: text("description"),
   language: text("language"),
   stars: integer("stars").default(0),
   forks: integer("forks").default(0),
   url: text("url").notNull(),
-  platformData: jsonb("platform_data").$type<{
-    github?: {
-      owner: string;
-      repo: string;
-      topics?: string[];
-      license?: string;
-    };
-    gitlab?: {
-      namespace: string;
-      projectId: number;
-      visibility?: string;
-    };
-    bitbucket?: {
-      workspace: string;
-      repo_slug: string;
-      scm?: string;
-    };
-  }>(),
   aiAnalysis: jsonb("ai_analysis").$type<{
     suggestions: string[];
     analyzedAt: string;
@@ -52,9 +33,7 @@ export const repositories = pgTable("repositories", {
     };
   }>(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-}, (table) => ({
-  platformUnique: uniqueIndex('platform_unique_idx').on(table.platform, table.platformId)
-}));
+});
 
 export const bookmarks = pgTable("bookmarks", {
   id: serial("id").primaryKey(),

@@ -5,27 +5,32 @@ import { bookmarkRepo } from "@/lib/api";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-import type { Platform } from "@/lib/types";
-import { getPlatformClient } from "@/lib/platforms";
 
-const platforms = ["github", "gitlab", "bitbucket"] as const;
 const languages = ["All", "JavaScript", "TypeScript", "Python", "Rust", "Go", "Java", "C++"];
 const sortOptions = ["stars", "forks", "recent"];
 
 export function Home() {
   const { toast } = useToast();
-  const [selectedPlatform, setSelectedPlatform] = useState<Platform>("github");
   const [selectedLanguage, setSelectedLanguage] = useState("All");
   const [sortBy, setSortBy] = useState("stars");
   const [minStars, setMinStars] = useState("100");
 
   const { data: repos, isLoading } = useQuery({
-    queryKey: ["/api/trending", selectedPlatform, selectedLanguage, sortBy, minStars],
-    queryFn: () => getPlatformClient(selectedPlatform).getTrendingRepos({
-      language: selectedLanguage,
-      sort: sortBy,
-      minStars: parseInt(minStars),
-    }),
+    queryKey: ["/api/trending", selectedLanguage, sortBy, minStars],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (selectedLanguage !== "All") {
+        params.append("language", selectedLanguage);
+      }
+      params.append("sort", sortBy);
+      params.append("minStars", minStars);
+      
+      const response = await fetch(`/api/trending?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch trending repositories");
+      }
+      return response.json();
+    },
   });
 
   return (
@@ -36,18 +41,6 @@ export function Home() {
         </h1>
         
         <div className="flex space-x-4 items-center">
-          <Select value={selectedPlatform} onValueChange={setSelectedPlatform}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select Platform" />
-            </SelectTrigger>
-            <SelectContent>
-              {platforms.map(platform => (
-                <SelectItem key={platform} value={platform}>
-                  {platform.charAt(0).toUpperCase() + platform.slice(1)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
           
           <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
             <SelectTrigger className="w-[180px]">
