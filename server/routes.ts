@@ -356,7 +356,16 @@ Format the response as specified in the system prompt.`;
                   if (s.useCase && s.description) {
                     return `${s.useCase}: ${s.description}`.slice(0, 100);
                   }
-                  return String(s.text || s.suggestion || s.useCase || JSON.stringify(s)).slice(0, 100);
+                  if (s.text || s.suggestion) {
+                    return String(s.text || s.suggestion).slice(0, 100);
+                  }
+                  try {
+                    const stringified = JSON.stringify(s);
+                    if (stringified !== '{}') {
+                      return stringified.slice(0, 100);
+                    }
+                  } catch (e) {}
+                  return 'Invalid suggestion format';
                 }
                 return String(s).slice(0, 100);
               })
