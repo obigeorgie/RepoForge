@@ -38,12 +38,14 @@ export function NavBar() {
             </Link>
             
             <div className="hidden md:block w-96">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+              <div className="relative group">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500 group-hover:text-primary transition-colors duration-300" />
                 <Input
-                  placeholder="Search repositories..."
-                  className="w-full pl-10 bg-gray-800/50"
+                  placeholder="🔍 Find awesome projects..."
+                  className="w-full pl-10 bg-gray-800/50 border-gray-700 focus:border-primary/50 transition-all duration-300"
                 />
+                {/* Search bar glow effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/10 to-primary/0 opacity-0 group-hover:opacity-100 transition-all duration-700 blur-sm rounded-md" />
               </div>
             </div>
           </div>
