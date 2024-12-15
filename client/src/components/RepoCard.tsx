@@ -12,8 +12,13 @@ interface RepoCardProps {
 }
 
 export function RepoCard({ repo, onBookmark }: RepoCardProps) {
-  console.log('RepoCard AI Analysis:', repo.aiAnalysis);
-  console.log('Suggestions:', repo.aiAnalysis?.suggestions);
+  console.log('RepoCard props:', {
+    name: repo.name,
+    aiAnalysis: repo.aiAnalysis,
+    suggestions: repo.aiAnalysis?.suggestions,
+    insights: repo.aiAnalysis?.insights,
+    trendingScore: repo.aiAnalysis?.trendingScore
+  });
 
   return (
     <motion.div
@@ -53,7 +58,7 @@ export function RepoCard({ repo, onBookmark }: RepoCardProps) {
             {repo.description}
           </p>
           
-          {repo.aiAnalysis?.suggestions && repo.aiAnalysis.suggestions.length > 0 && (
+          {repo.aiAnalysis && repo.aiAnalysis.suggestions && repo.aiAnalysis.suggestions.length > 0 && (
             <div className="mt-4 space-y-4">
               <div className="relative">
                 {/* Background glow */}
@@ -85,7 +90,7 @@ export function RepoCard({ repo, onBookmark }: RepoCardProps) {
                 </ul>
               </div>
               
-              {repo.aiAnalysis.insights && (
+              {repo.aiAnalysis && repo.aiAnalysis.insights && (
                 <div className="mt-4 space-y-3">
                   <div className="bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 rounded-lg p-4 backdrop-blur-sm">
                     <h4 className="text-sm font-medium text-primary mb-3">
