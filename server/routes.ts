@@ -265,20 +265,39 @@ export function registerRoutes(app: Express) {
   return httpServer;
 }
 
-async function analyzeRepository(description: string | null, name: string): Promise<{ suggestions: string[], analyzedAt: string, topKeywords: string[], domainCategory: string, trendingScore: number }> {
+async function analyzeRepository(description: string | null, name: string): Promise<{ 
+  suggestions: string[], 
+  analyzedAt: string, 
+  topKeywords: string[], 
+  domainCategory: string, 
+  trendingScore: number,
+  insights: {
+    trendReason: string,
+    ecosystemImpact: string,
+    futureOutlook: string
+  }
+}> {
   try {
-    const systemPrompt = `You are an AI assistant analyzing GitHub repositories. Given this repository: "${name}" with description: "${description || 'No description'}", provide exactly 3 practical suggestions for developers.
+    const systemPrompt = `You are an AI assistant analyzing GitHub repositories. Given this repository: "${name}" with description: "${description || 'No description'}", analyze its impact and provide insights.
 
-Remember:
-1. Each suggestion must be a complete, actionable sentence under 100 characters
-2. Focus on concrete learning opportunities
-3. Respond in this exact JSON format:
+Remember to:
+1. Provide 3 practical learning suggestions
+2. Analyze why this repository is trending
+3. Assess its impact on the developer ecosystem
+4. Predict its future trajectory
+
+Respond in this exact JSON format:
 {
   "suggestions": [
     "Build X by following the tutorial",
     "Create Y using the examples",
     "Learn Z by implementing features"
-  ]
+  ],
+  "insights": {
+    "trendReason": "Brief explanation of why this repo is trending",
+    "ecosystemImpact": "How this affects the developer ecosystem",
+    "futureOutlook": "Predicted future trajectory and relevance"
+  }
 }`;
 
     console.log('Calling OpenAI API for repository:', name);

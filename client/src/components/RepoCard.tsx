@@ -85,21 +85,46 @@ export function RepoCard({ repo, onBookmark }: RepoCardProps) {
                 </ul>
               </div>
               
-              {typeof repo.aiAnalysis.trendingScore === 'number' && (
-                <div className="flex items-center space-x-2 bg-gradient-to-r from-primary/10 to-primary/20 p-3 rounded-lg backdrop-blur-sm">
-                  <span role="img" aria-label="fire" className="text-xl animate-pulse">🔥</span>
-                  <div className="flex-1">
-                    <h4 className="text-sm font-medium text-primary">Trending Score</h4>
-                    <div className="flex items-center mt-1">
-                      <div className="h-2 flex-1 bg-gray-700 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-gradient-to-r from-orange-500 to-yellow-500 transition-all duration-500"
-                          style={{ width: `${repo.aiAnalysis.trendingScore}%` }}
-                        />
+              {repo.aiAnalysis.insights && (
+                <div className="mt-4 space-y-3">
+                  <div className="bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 rounded-lg p-4 backdrop-blur-sm">
+                    <h4 className="text-sm font-medium text-primary mb-3">
+                      <span role="img" aria-label="insights" className="mr-2">🔮</span>
+                      AI Insights
+                    </h4>
+                    <div className="space-y-2">
+                      <div>
+                        <h5 className="text-xs font-medium text-primary/80">Why it's Trending</h5>
+                        <p className="text-sm text-gray-400">{repo.aiAnalysis.insights.trendReason}</p>
                       </div>
-                      <span className="ml-2 text-xs font-medium text-orange-500">{repo.aiAnalysis.trendingScore}/100</span>
+                      <div>
+                        <h5 className="text-xs font-medium text-primary/80">Ecosystem Impact</h5>
+                        <p className="text-sm text-gray-400">{repo.aiAnalysis.insights.ecosystemImpact}</p>
+                      </div>
+                      <div>
+                        <h5 className="text-xs font-medium text-primary/80">Future Outlook</h5>
+                        <p className="text-sm text-gray-400">{repo.aiAnalysis.insights.futureOutlook}</p>
+                      </div>
                     </div>
                   </div>
+
+                  {typeof repo.aiAnalysis.trendingScore === 'number' && (
+                    <div className="flex items-center space-x-2 bg-gradient-to-r from-primary/10 to-primary/20 p-3 rounded-lg backdrop-blur-sm">
+                      <span role="img" aria-label="fire" className="text-xl animate-pulse">🔥</span>
+                      <div className="flex-1">
+                        <h4 className="text-sm font-medium text-primary">Trending Score</h4>
+                        <div className="flex items-center mt-1">
+                          <div className="h-2 flex-1 bg-gray-700 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-gradient-to-r from-orange-500 to-yellow-500 transition-all duration-500"
+                              style={{ width: `${repo.aiAnalysis.trendingScore}%` }}
+                            />
+                          </div>
+                          <span className="ml-2 text-xs font-medium text-orange-500">{repo.aiAnalysis.trendingScore}/100</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

@@ -19,6 +19,11 @@ export interface Repository {
     topKeywords?: string[];
     domainCategory?: string;
     trendingScore?: number;
+    insights?: {
+      trendReason: string;
+      ecosystemImpact: string;
+      futureOutlook: string;
+    };
   };
 }
 
