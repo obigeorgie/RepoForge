@@ -90,17 +90,7 @@ export function RepoCard({ repo, onBookmark }: RepoCardProps) {
                 </ul>
               </div>
               
-              {/* Debug Info */}
-              <div className="mt-4 p-2 border border-red-500">
-                <h5 className="text-xs font-medium mb-1">Debug Information:</h5>
-                <pre className="text-xs overflow-auto">
-                  {JSON.stringify({
-                    hasAnalysis: !!repo.aiAnalysis,
-                    hasInsights: !!repo.aiAnalysis?.insights,
-                    insights: repo.aiAnalysis?.insights
-                  }, null, 2)}
-                </pre>
-              </div>
+              {/* Debug info box removed */}
               
               {repo.aiAnalysis && repo.aiAnalysis.insights && (
                 <div className="mt-4 space-y-3">
