@@ -37,12 +37,12 @@ export function RepoCard({ repo, onBookmark }: RepoCardProps) {
             </div>
             <div className="flex space-x-2">
               <div className="flex items-center space-x-1 text-yellow-500">
-                <Star size={16} />
-                <span className="text-sm">{repo.stars}</span>
+                <span className="text-lg" role="img" aria-label="stars">⭐</span>
+                <span className="text-sm font-medium">{repo.stars.toLocaleString()}</span>
               </div>
               <div className="flex items-center space-x-1 text-blue-500">
-                <GitFork size={16} />
-                <span className="text-sm">{repo.forks}</span>
+                <span className="text-lg" role="img" aria-label="community score">🤝</span>
+                <span className="text-sm font-medium">{repo.forks.toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -54,50 +54,61 @@ export function RepoCard({ repo, onBookmark }: RepoCardProps) {
             <div className="mt-4 space-y-4">
               {repo.aiAnalysis.suggestions && repo.aiAnalysis.suggestions.length > 0 && (
                 <div>
-                  <h4 className="text-sm font-medium text-primary mb-2">AI Suggestions</h4>
-                  <ul className="space-y-1">
+                  <h4 className="text-sm font-medium text-primary mb-2">
+                    <span role="img" aria-label="magic wand">✨</span> Cool Things You Can Do
+                  </h4>
+                  <ul className="space-y-2">
                     {repo.aiAnalysis.suggestions.map((suggestion, i) => (
-                      <li key={i} className="text-sm text-gray-400 leading-relaxed">
-                        • {typeof suggestion === 'string' ? suggestion : ''}
+                      <li key={i} className="text-sm text-gray-400 leading-relaxed flex items-start space-x-2">
+                        <span role="img" aria-label="bullet point" className="text-lg">
+                          {['🎮', '🚀', '🎨'][i]}
+                        </span>
+                        <span>{typeof suggestion === 'string' ? suggestion : ''}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
               )}
               
-              {repo.aiAnalysis.topKeywords && (
-                <div>
-                  <h4 className="text-sm font-medium text-primary mb-2">Top Keywords</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {repo.aiAnalysis.topKeywords.map((keyword, i) => (
-                      <Badge key={i} variant="secondary" className="text-xs">
-                        {keyword}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-              
               {repo.aiAnalysis.trendingScore !== undefined && (
-                <div className="flex items-center space-x-2">
-                  <h4 className="text-sm font-medium text-primary">Trending Score</h4>
-                  <Badge variant="outline" className="text-xs">
-                    {repo.aiAnalysis.trendingScore}/100
-                  </Badge>
+                <div className="flex items-center space-x-2 bg-gradient-to-r from-primary/10 to-primary/20 p-3 rounded-lg">
+                  <span role="img" aria-label="fire" className="text-xl">🔥</span>
+                  <div>
+                    <h4 className="text-sm font-medium text-primary">Popularity Score</h4>
+                    <div className="flex items-center">
+                      <div className="h-2 w-24 bg-gray-700 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-yellow-500 to-red-500 transition-all duration-500"
+                          style={{ width: `${repo.aiAnalysis.trendingScore}%` }}
+                        />
+                      </div>
+                      <span className="ml-2 text-xs font-medium">{repo.aiAnalysis.trendingScore}/100</span>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
           )}
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Button variant="outline" size="sm" onClick={onBookmark}>
-            <BookmarkPlus size={16} className="mr-2" />
-            Save
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onBookmark}
+            className="bg-gradient-to-r from-primary/10 to-primary/20 hover:from-primary/20 hover:to-primary/30 transition-all duration-300"
+          >
+            <span role="img" aria-label="collect" className="mr-2">📚</span>
+            Collect
           </Button>
-          <Button variant="ghost" size="sm" asChild>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            asChild
+            className="hover:bg-primary/10 transition-all duration-300"
+          >
             <a href={repo.url} target="_blank" rel="noopener noreferrer">
-              <Share2 size={16} className="mr-2" />
-              View
+              <span role="img" aria-label="explore" className="mr-2">🔍</span>
+              Explore
             </a>
           </Button>
         </CardFooter>
