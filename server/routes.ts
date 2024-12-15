@@ -347,13 +347,19 @@ Format the response as specified in the system prompt.`;
     }
 
     return {
-        suggestions: result.suggestions.slice(0, 3).map((s: any) => 
-          typeof s === 'string' ? s.slice(0, 100) : String(s).slice(0, 100)
-        ),
+        suggestions: Array.isArray(result.suggestions) 
+          ? result.suggestions
+              .slice(0, 3)
+              .map((s: any) => {
+                if (typeof s === 'string') return s.slice(0, 100);
+                if (typeof s === 'object' && s !== null) return String(s.text || s.suggestion || JSON.stringify(s)).slice(0, 100);
+                return String(s).slice(0, 100);
+              })
+          : [],
         analyzedAt: new Date().toISOString(),
-        topKeywords: result.topKeywords || [],
+        topKeywords: Array.isArray(result.topKeywords) ? result.topKeywords : [],
         domainCategory: result.domainCategory || "Unknown",
-        trendingScore: result.trendingScore || 50,
+        trendingScore: typeof result.trendingScore === 'number' ? result.trendingScore : 50,
       };
   } catch (error) {
     console.error("Error analyzing repository:", error);
