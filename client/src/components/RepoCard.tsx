@@ -12,6 +12,9 @@ interface RepoCardProps {
 }
 
 export function RepoCard({ repo, onBookmark }: RepoCardProps) {
+  console.log('RepoCard AI Analysis:', repo.aiAnalysis);
+  console.log('Suggestions:', repo.aiAnalysis?.suggestions);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -44,8 +47,11 @@ export function RepoCard({ repo, onBookmark }: RepoCardProps) {
             </div>
           </div>
         </CardHeader>
+
         <CardContent>
-          <p className="text-gray-400 group-hover:text-gray-300 transition-all duration-300">{repo.description}</p>
+          <p className="text-gray-400 group-hover:text-gray-300 transition-all duration-300">
+            {repo.description}
+          </p>
           
           {repo.aiAnalysis?.suggestions && repo.aiAnalysis.suggestions.length > 0 && (
             <div className="mt-4 space-y-4">
@@ -57,30 +63,25 @@ export function RepoCard({ repo, onBookmark }: RepoCardProps) {
                   <span role="img" aria-label="magic wand" className="animate-bounce inline-block">✨</span> AI Adventure Ideas
                 </h4>
                 <ul className="space-y-2">
-                  {(repo.aiAnalysis?.suggestions || []).map((suggestion: string, i: number) => {
-                    // Ensure suggestion is a string and not empty
-                    const displayText = typeof suggestion === 'string' && suggestion.trim() 
-                      ? suggestion
-                      : 'No suggestion available';
-                      
-                    return (
-                      <li 
-                        key={i} 
-                        className="text-sm text-gray-400 leading-relaxed flex items-start space-x-2 group/item hover:text-gray-300 transition-all duration-300"
+                  {repo.aiAnalysis.suggestions.map((suggestion: any, i: number) => (
+                    <li 
+                      key={i} 
+                      className="text-sm text-gray-400 leading-relaxed flex items-start space-x-2 group/item hover:text-gray-300 transition-all duration-300"
+                    >
+                      <span 
+                        role="img" 
+                        aria-label="bullet point" 
+                        className="text-lg group-hover/item:scale-110 transition-transform duration-300"
                       >
-                        <span 
-                          role="img" 
-                          aria-label="bullet point" 
-                          className="text-lg group-hover/item:scale-110 transition-transform duration-300"
-                        >
-                          {['🎯', '🚀', '💡'][i]}
-                        </span>
-                        <span className="group-hover/item:translate-x-1 transition-transform duration-300">
-                          {displayText}
-                        </span>
-                      </li>
-                    );
-                  })}
+                        {['🎯', '🚀', '💡'][i]}
+                      </span>
+                      <span className="group-hover/item:translate-x-1 transition-transform duration-300">
+                        {typeof suggestion === 'string' 
+                          ? suggestion 
+                          : suggestion.description || suggestion.use_case || 'No suggestion available'}
+                      </span>
+                    </li>
+                  ))}
                 </ul>
               </div>
               
@@ -104,6 +105,7 @@ export function RepoCard({ repo, onBookmark }: RepoCardProps) {
             </div>
           )}
         </CardContent>
+
         <CardFooter className="flex justify-between">
           <Button 
             variant="outline" 

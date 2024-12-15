@@ -6,9 +6,15 @@ export interface Repository {
   forks: number;
   language: string;
   url: string;
-  aiSuggestions?: string[];
+  aiSuggestions?: Array<{
+    use_case?: string;
+    description?: string;
+  }>;
   aiAnalysis?: {
-    suggestions: string[];
+    suggestions: Array<{
+      use_case?: string;
+      description?: string;
+    }>;
     analyzedAt: string;
     topKeywords?: string[];
     domainCategory?: string;

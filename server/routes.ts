@@ -143,16 +143,20 @@ export function registerRoutes(app: Express) {
       }
 
       const data = await response.json();
+      console.log('GitHub API Response:', data.items[0]); // Log first item
       
       // Process each repository
       const repos = await Promise.all(data.items.map(async (item: any) => {
+        console.log(`Processing repository: ${item.full_name}`);
         // Get or create repository in database
         let repo = await db.query.repositories.findFirst({
           where: eq(repositories.githubId, item.id.toString()),
         });
 
         if (!repo) {
+          console.log(`Getting AI analysis for: ${item.full_name}`);
           const aiAnalysis = await analyzeRepository(item.description, item.full_name);
+          console.log('AI Analysis result:', aiAnalysis);
           
           const [newRepo] = await db
             .insert(repositories)
