@@ -166,7 +166,10 @@ export function registerRoutes(app: Express) {
               url: item.html_url,
               aiAnalysis: {
                 suggestions: aiAnalysis.suggestions,
-                analyzedAt: aiAnalysis.analyzedAt
+                analyzedAt: aiAnalysis.analyzedAt,
+                topKeywords: aiAnalysis.topKeywords,
+                domainCategory: aiAnalysis.domainCategory,
+                trendingScore: aiAnalysis.trendingScore,
               },
             })
             .returning();
@@ -182,7 +185,13 @@ export function registerRoutes(app: Express) {
           stars: repo.stars,
           forks: repo.forks,
           url: repo.url,
-          aiSuggestions: repo.aiAnalysis?.suggestions,
+          aiAnalysis: repo.aiAnalysis ? {
+            suggestions: repo.aiAnalysis.suggestions,
+            analyzedAt: repo.aiAnalysis.analyzedAt,
+            topKeywords: repo.aiAnalysis.topKeywords || [],
+            domainCategory: repo.aiAnalysis.domainCategory || "Unknown",
+            trendingScore: repo.aiAnalysis.trendingScore || 50,
+          } : undefined,
         };
       }));
 
@@ -252,13 +261,16 @@ export function registerRoutes(app: Express) {
   return httpServer;
 }
 
-async function analyzeRepository(description: string | null, name: string): Promise<{ suggestions: string[], analyzedAt: string }> {
+async function analyzeRepository(description: string | null, name: string): Promise<{ suggestions: string[], analyzedAt: string, topKeywords: string[], domainCategory: string, trendingScore: number }> {
   try {
       // If both name and description are missing, return empty suggestions
       if (!name) {
         return {
           suggestions: [],
-          analyzedAt: new Date().toISOString()
+          analyzedAt: new Date().toISOString(),
+          topKeywords: [],
+          domainCategory: "Unknown",
+          trendingScore: 50
         };
       }
 
@@ -302,13 +314,16 @@ Format: {"suggestions": ["suggestion1", "suggestion2", "suggestion3"]}`;
     }
 
     const result = JSON.parse(content);
-    if (!Array.isArray(result.suggestions) || result.suggestions.length !== 3) {
+    if (!Array.isArray(result.suggestions)) {
       throw new Error("Invalid suggestions format from OpenAI");
     }
 
     return {
-      suggestions: result.suggestions.map(s => s.slice(0, 100)), // Limit length
+      suggestions: result.suggestions.slice(0, 3).map(s => s.slice(0, 100)), // Limit to 3 suggestions, each max 100 chars
       analyzedAt: new Date().toISOString(),
+      topKeywords: result.topKeywords || [],
+      domainCategory: result.domainCategory || "Unknown",
+      trendingScore: result.trendingScore || 50,
     };
   } catch (error) {
     console.error("Error analyzing repository:", error);
@@ -320,6 +335,9 @@ Format: {"suggestions": ["suggestion1", "suggestion2", "suggestion3"]}`;
     return {
       suggestions: [],
       analyzedAt: new Date().toISOString(),
+      topKeywords: [],
+      domainCategory: "Unknown",
+      trendingScore: 50,
     };
   }
 }
