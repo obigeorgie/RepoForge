@@ -47,44 +47,42 @@ export function RepoCard({ repo, onBookmark }: RepoCardProps) {
         <CardContent>
           <p className="text-gray-400 group-hover:text-gray-300 transition-all duration-300">{repo.description}</p>
           
-          {repo.aiAnalysis && (
+          {repo.aiAnalysis?.suggestions && repo.aiAnalysis.suggestions.length > 0 && (
             <div className="mt-4 space-y-4">
-              {repo.aiAnalysis.suggestions && repo.aiAnalysis.suggestions.length > 0 && (
-                <div className="relative">
-                  {/* Background glow */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-lg -z-10" />
-                  
-                  <h4 className="text-sm font-medium bg-gradient-to-r from-primary to-primary-foreground bg-clip-text text-transparent mb-2">
-                    <span role="img" aria-label="magic wand" className="animate-bounce inline-block">✨</span> Adventure Ideas
-                  </h4>
-                  <ul className="space-y-2">
-                    {repo.aiAnalysis.suggestions.map((suggestion, i) => (
-                      <li key={i} className="text-sm text-gray-400 leading-relaxed flex items-start space-x-2 group/item hover:text-gray-300 transition-all duration-300">
-                        <span role="img" aria-label="bullet point" className="text-lg group-hover/item:scale-110 transition-transform duration-300">
-                          {['🎮', '🚀', '🎨'][i]}
-                        </span>
-                        <span className="group-hover/item:translate-x-1 transition-transform duration-300">
-                          {typeof suggestion === 'string' ? suggestion : ''}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              <div className="relative">
+                {/* Background glow */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-lg -z-10" />
+                
+                <h4 className="text-sm font-medium bg-gradient-to-r from-primary to-primary-foreground bg-clip-text text-transparent mb-2">
+                  <span role="img" aria-label="magic wand" className="animate-bounce inline-block">✨</span> AI Adventure Ideas
+                </h4>
+                <ul className="space-y-2">
+                  {repo.aiAnalysis.suggestions.slice(0, 3).map((suggestion: string, i: number) => (
+                    <li key={i} className="text-sm text-gray-400 leading-relaxed flex items-start space-x-2 group/item hover:text-gray-300 transition-all duration-300">
+                      <span role="img" aria-label="bullet point" className="text-lg group-hover/item:scale-110 transition-transform duration-300">
+                        {['🎯', '🚀', '💡'][i % 3]}
+                      </span>
+                      <span className="group-hover/item:translate-x-1 transition-transform duration-300">
+                        {String(suggestion)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
               
-              {repo.aiAnalysis.trendingScore !== undefined && (
-                <div className="flex items-center space-x-2 bg-gradient-to-r from-primary/10 to-primary/20 p-3 rounded-lg">
-                  <span role="img" aria-label="fire" className="text-xl">🔥</span>
-                  <div>
-                    <h4 className="text-sm font-medium text-primary">Popularity Score</h4>
-                    <div className="flex items-center">
-                      <div className="h-2 w-24 bg-gray-700 rounded-full overflow-hidden">
+              {typeof repo.aiAnalysis.trendingScore === 'number' && (
+                <div className="flex items-center space-x-2 bg-gradient-to-r from-primary/10 to-primary/20 p-3 rounded-lg backdrop-blur-sm">
+                  <span role="img" aria-label="fire" className="text-xl animate-pulse">🔥</span>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-medium text-primary">Trending Score</h4>
+                    <div className="flex items-center mt-1">
+                      <div className="h-2 flex-1 bg-gray-700 rounded-full overflow-hidden">
                         <div 
-                          className="h-full bg-gradient-to-r from-yellow-500 to-red-500 transition-all duration-500"
+                          className="h-full bg-gradient-to-r from-orange-500 to-yellow-500 transition-all duration-500"
                           style={{ width: `${repo.aiAnalysis.trendingScore}%` }}
                         />
                       </div>
-                      <span className="ml-2 text-xs font-medium">{repo.aiAnalysis.trendingScore}/100</span>
+                      <span className="ml-2 text-xs font-medium text-orange-500">{repo.aiAnalysis.trendingScore}/100</span>
                     </div>
                   </div>
                 </div>
