@@ -57,16 +57,19 @@ export function RepoCard({ repo, onBookmark }: RepoCardProps) {
                   <span role="img" aria-label="magic wand" className="animate-bounce inline-block">✨</span> AI Adventure Ideas
                 </h4>
                 <ul className="space-y-2">
-                  {repo.aiAnalysis.suggestions.slice(0, 3).map((suggestion: string, i: number) => (
-                    <li key={i} className="text-sm text-gray-400 leading-relaxed flex items-start space-x-2 group/item hover:text-gray-300 transition-all duration-300">
-                      <span role="img" aria-label="bullet point" className="text-lg group-hover/item:scale-110 transition-transform duration-300">
-                        {['🎯', '🚀', '💡'][i % 3]}
-                      </span>
-                      <span className="group-hover/item:translate-x-1 transition-transform duration-300">
-                        {String(suggestion)}
-                      </span>
-                    </li>
-                  ))}
+                  {repo.aiAnalysis.suggestions.slice(0, 3).map((suggestion: any, i: number) => {
+                    const suggestionText = typeof suggestion === 'string' ? suggestion : String(suggestion);
+                    return (
+                      <li key={i} className="text-sm text-gray-400 leading-relaxed flex items-start space-x-2 group/item hover:text-gray-300 transition-all duration-300">
+                        <span role="img" aria-label="bullet point" className="text-lg group-hover/item:scale-110 transition-transform duration-300">
+                          {['🎯', '🚀', '💡'][i % 3]}
+                        </span>
+                        <span className="group-hover/item:translate-x-1 transition-transform duration-300">
+                          {suggestionText}
+                        </span>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
               

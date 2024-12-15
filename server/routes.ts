@@ -347,12 +347,14 @@ Format the response as specified in the system prompt.`;
     }
 
     return {
-      suggestions: result.suggestions.slice(0, 3).map(s => s.slice(0, 100)), // Limit to 3 suggestions, each max 100 chars
-      analyzedAt: new Date().toISOString(),
-      topKeywords: result.topKeywords || [],
-      domainCategory: result.domainCategory || "Unknown",
-      trendingScore: result.trendingScore || 50,
-    };
+        suggestions: result.suggestions.slice(0, 3).map((s: any) => 
+          typeof s === 'string' ? s.slice(0, 100) : String(s).slice(0, 100)
+        ),
+        analyzedAt: new Date().toISOString(),
+        topKeywords: result.topKeywords || [],
+        domainCategory: result.domainCategory || "Unknown",
+        trendingScore: result.trendingScore || 50,
+      };
   } catch (error) {
     console.error("Error analyzing repository:", error);
     if (error instanceof Error) {
