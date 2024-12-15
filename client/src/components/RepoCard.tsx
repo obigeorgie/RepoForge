@@ -57,25 +57,26 @@ export function RepoCard({ repo, onBookmark }: RepoCardProps) {
                   <span role="img" aria-label="magic wand" className="animate-bounce inline-block">✨</span> AI Adventure Ideas
                 </h4>
                 <ul className="space-y-2">
-                  {repo.aiAnalysis.suggestions.map((suggestion: any, i: number) => {
-                    let suggestionText = '';
-                    try {
-                      suggestionText = typeof suggestion === 'string' 
-                        ? suggestion 
-                        : typeof suggestion === 'object' && suggestion !== null
-                        ? String(suggestion.text || suggestion.suggestion || JSON.stringify(suggestion))
-                        : String(suggestion);
-                    } catch (e) {
-                      console.error('Error processing suggestion:', e);
-                      suggestionText = 'Error displaying suggestion';
-                    }
+                  {(repo.aiAnalysis?.suggestions || []).map((suggestion: string, i: number) => {
+                    // Ensure suggestion is a string and not empty
+                    const displayText = typeof suggestion === 'string' && suggestion.trim() 
+                      ? suggestion
+                      : 'No suggestion available';
+                      
                     return (
-                      <li key={i} className="text-sm text-gray-400 leading-relaxed flex items-start space-x-2 group/item hover:text-gray-300 transition-all duration-300">
-                        <span role="img" aria-label="bullet point" className="text-lg group-hover/item:scale-110 transition-transform duration-300">
-                          {['🎯', '🚀', '💡'][i % 3]}
+                      <li 
+                        key={i} 
+                        className="text-sm text-gray-400 leading-relaxed flex items-start space-x-2 group/item hover:text-gray-300 transition-all duration-300"
+                      >
+                        <span 
+                          role="img" 
+                          aria-label="bullet point" 
+                          className="text-lg group-hover/item:scale-110 transition-transform duration-300"
+                        >
+                          {['🎯', '🚀', '💡'][i]}
                         </span>
                         <span className="group-hover/item:translate-x-1 transition-transform duration-300">
-                          {suggestionText}
+                          {displayText}
                         </span>
                       </li>
                     );

@@ -274,17 +274,16 @@ async function analyzeRepository(description: string | null, name: string): Prom
         };
       }
 
-      const systemPrompt = `You are an AI assistant specialized in analyzing GitHub repositories. Analyze the repository and provide comprehensive insights for developers.
+      const systemPrompt = `You are an AI assistant specialized in analyzing GitHub repositories. Your task is to provide three simple, actionable suggestions for using this repository.
 
-Rules:
-1. Each suggestion must be an actionable use case or integration idea (max 100 chars)
-2. Consider both technical implementation and business value
-3. Focus on practical applications and modern development trends
-4. Analyze the ecosystem impact and potential integrations
-5. Calculate trending score based on:
-   - Technology relevance (33%)
-   - Community potential (33%)
-   - Innovation factor (34%)
+Rules for suggestions:
+1. Return an array of EXACTLY 3 plain strings in the suggestions field
+2. Each suggestion must be a complete, actionable sentence
+3. Keep each suggestion under 100 characters
+4. Focus on concrete, practical ways to use the repository
+5. DO NOT return objects or nested structures
+6. BAD example: { "useCase": "...", "description": "..." }
+7. GOOD example: "Create an interactive tutorial website using this framework's components"
 
 Domain Categories:
 - Web Development
@@ -299,9 +298,9 @@ Domain Categories:
 Format your response as a JSON object with:
 {
   "suggestions": [
-    "Simple string describing a practical use case or integration idea",
-    "Simple string describing another use case",
-    "Simple string describing a third use case"
+    "Create interactive coding tutorials using the platform's extensive curriculum",
+    "Build a community-driven learning hub for peer programming sessions",
+    "Develop automated progress tracking tools for learners"
   ],
   "topKeywords": ["relevant", "technical", "keywords"],
   "domainCategory": "one from categories above",
@@ -346,35 +345,44 @@ Format the response as specified in the system prompt.`;
       throw new Error("Invalid suggestions format from OpenAI");
     }
 
+    // Process suggestions to ensure we always get 3 clean strings
+    const defaultSuggestions = [
+      "Explore the repository's documentation to understand its features",
+      "Try out the basic examples to get started quickly",
+      "Join the community discussions to learn from others"
+    ];
+
+    let processedSuggestions: string[];
+    
+    try {
+      // Validate and process the suggestions from OpenAI
+      if (Array.isArray(result.suggestions)) {
+        processedSuggestions = result.suggestions
+          .map(s => {
+            if (typeof s === 'string') return s;
+            return 'Invalid suggestion format';
+          })
+          .slice(0, 3);
+      } else {
+        processedSuggestions = [];
+      }
+    } catch (e) {
+      console.error('Error processing suggestions:', e);
+      processedSuggestions = [];
+    }
+
+    // Ensure we have exactly 3 suggestions
+    while (processedSuggestions.length < 3) {
+      processedSuggestions.push(defaultSuggestions[processedSuggestions.length]);
+    }
+
     return {
-        suggestions: Array.isArray(result.suggestions) 
-          ? result.suggestions
-              .slice(0, 3)
-              .map((s: any) => {
-                if (typeof s === 'string') return s.slice(0, 100);
-                if (typeof s === 'object' && s !== null) {
-                  if (s.useCase && s.description) {
-                    return `${s.useCase}: ${s.description}`.slice(0, 100);
-                  }
-                  if (s.text || s.suggestion) {
-                    return String(s.text || s.suggestion).slice(0, 100);
-                  }
-                  try {
-                    const stringified = JSON.stringify(s);
-                    if (stringified !== '{}') {
-                      return stringified.slice(0, 100);
-                    }
-                  } catch (e) {}
-                  return 'Invalid suggestion format';
-                }
-                return String(s).slice(0, 100);
-              })
-          : [],
-        analyzedAt: new Date().toISOString(),
-        topKeywords: Array.isArray(result.topKeywords) ? result.topKeywords : [],
-        domainCategory: result.domainCategory || "Unknown",
-        trendingScore: typeof result.trendingScore === 'number' ? result.trendingScore : 50,
-      };
+      suggestions: processedSuggestions,
+      analyzedAt: new Date().toISOString(),
+      topKeywords: Array.isArray(result.topKeywords) ? result.topKeywords : [],
+      domainCategory: result.domainCategory || "Unknown",
+      trendingScore: typeof result.trendingScore === 'number' ? result.trendingScore : 50,
+    };
   } catch (error) {
     console.error("Error analyzing repository:", error);
     if (error instanceof Error) {
