@@ -299,9 +299,9 @@ Domain Categories:
 Format your response as a JSON object with:
 {
   "suggestions": [
-    "Integration idea focusing on practical implementation",
-    "Business use case highlighting value proposition",
-    "Modern development trend or innovative application"
+    "Simple string describing a practical use case or integration idea",
+    "Simple string describing another use case",
+    "Simple string describing a third use case"
   ],
   "topKeywords": ["relevant", "technical", "keywords"],
   "domainCategory": "one from categories above",
@@ -352,7 +352,12 @@ Format the response as specified in the system prompt.`;
               .slice(0, 3)
               .map((s: any) => {
                 if (typeof s === 'string') return s.slice(0, 100);
-                if (typeof s === 'object' && s !== null) return String(s.text || s.suggestion || JSON.stringify(s)).slice(0, 100);
+                if (typeof s === 'object' && s !== null) {
+                  if (s.useCase && s.description) {
+                    return `${s.useCase}: ${s.description}`.slice(0, 100);
+                  }
+                  return String(s.text || s.suggestion || s.useCase || JSON.stringify(s)).slice(0, 100);
+                }
                 return String(s).slice(0, 100);
               })
           : [],
