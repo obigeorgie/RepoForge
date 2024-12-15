@@ -248,29 +248,55 @@ export function registerRoutes(app: Express) {
 
 async function analyzeRepository(description: string, name: string) {
   try {
+    const systemPrompt = `You are an AI assistant specialized in analyzing GitHub repositories and identifying their potential applications and use cases. Your goal is to suggest innovative and practical ways the repository could be used in real-world scenarios.
+
+Rules:
+1. Each suggestion should be specific, actionable, and highlight unique value propositions
+2. Consider both technical and business perspectives
+3. Keep suggestions concise (max 100 characters)
+4. Focus on practical applications that could be implemented immediately
+5. Avoid generic suggestions like "learn programming" or "study code"
+
+Format your response as a JSON object with a 'suggestions' array containing exactly 3 strings.`;
+
+    const userPrompt = `Repository Name: ${name}
+Description: ${description}
+
+Based on this information, provide 3 specific use cases or applications for this repository.
+Format: {"suggestions": ["suggestion1", "suggestion2", "suggestion3"]}`;
+
     const response = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
       messages: [
-        {
-          role: "system",
-          content: "You are an AI assistant that analyzes GitHub repositories and suggests potential use cases. Provide 3 concise suggestions as simple strings in a JSON array format.",
-        },
-        {
-          role: "user",
-          content: `Repository name: ${name}\nDescription: ${description}\n\nProvide 3 potential use cases for this repository as simple strings. Format: {"suggestions": ["suggestion1", "suggestion2", "suggestion3"]}`,
-        },
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
       ],
       response_format: { type: "json_object" },
+      temperature: 0.7,
+      max_tokens: 500
     });
 
     const content = response.choices[0].message.content;
-    const result = JSON.parse(content || '{"suggestions": []}');
+    if (!content) {
+      throw new Error("Empty response from OpenAI");
+    }
+
+    const result = JSON.parse(content);
+    if (!Array.isArray(result.suggestions) || result.suggestions.length !== 3) {
+      throw new Error("Invalid suggestions format from OpenAI");
+    }
+
     return {
-      suggestions: Array.isArray(result.suggestions) ? result.suggestions : [],
+      suggestions: result.suggestions.map(s => s.slice(0, 100)), // Limit length
       analyzedAt: new Date().toISOString(),
     };
   } catch (error) {
     console.error("Error analyzing repository:", error);
+    if (error instanceof Error) {
+      console.error("Error details:", error.message);
+    }
+    
+    // Return empty suggestions but don't fail the whole request
     return {
       suggestions: [],
       analyzedAt: new Date().toISOString(),
