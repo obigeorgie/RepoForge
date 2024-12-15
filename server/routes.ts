@@ -323,6 +323,7 @@ Respond in this exact JSON format:
 
     const result = JSON.parse(content);
     const suggestions = Array.isArray(result.suggestions) ? result.suggestions : [];
+    const insights = result.insights || {};
 
     // Ensure we have exactly 3 valid string suggestions
     const validSuggestions = suggestions
@@ -340,18 +341,24 @@ Respond in this exact JSON format:
       );
     }
 
-    return {
+    // Ensure insights are properly structured
+    const validInsights = {
+      trendReason: insights.trendReason || `${name} is gaining traction in the developer community`,
+      ecosystemImpact: insights.ecosystemImpact || "This repository contributes to the growing ecosystem",
+      futureOutlook: insights.futureOutlook || "Expected to maintain steady growth and adoption"
+    };
+
+    const analysisResult = {
       suggestions: validSuggestions,
       analyzedAt: new Date().toISOString(),
       topKeywords: ["github", "learning", "programming"],
       domainCategory: "Educational Resources",
       trendingScore: 75,
-      insights: result.insights || {
-        trendReason: `${name} is gaining traction in the developer community`,
-        ecosystemImpact: "This repository contributes to the growing ecosystem",
-        futureOutlook: "Expected to maintain steady growth and adoption"
-      }
+      insights: validInsights
     };
+
+    console.log('Analysis result for', name, ':', JSON.stringify(analysisResult, null, 2));
+    return analysisResult;
   } catch (error) {
     console.error("Error analyzing repository:", error);
     
