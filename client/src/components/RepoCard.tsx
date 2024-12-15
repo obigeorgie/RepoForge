@@ -24,15 +24,18 @@ export function RepoCard({ repo, onBookmark }: RepoCardProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <Card className="overflow-hidden border-2 border-gray-800 bg-gray-900/50 backdrop-blur-sm hover:border-primary/50 transition-all">
+      <Card className="overflow-hidden border-2 border-gray-800 bg-gray-900/50 backdrop-blur-sm hover:border-primary/50 transition-all relative group">
+        {/* Animated glow effect */}
+        <div className="absolute inset-px bg-gradient-to-r from-primary/0 via-primary/10 to-primary/0 opacity-0 group-hover:opacity-100 transition-all duration-700 blur-sm" />
+        
         <CardHeader>
           <div className="flex items-start justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-white">
+              <h3 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300 group-hover:from-primary group-hover:to-primary/70 transition-all duration-300">
                 {repo.name}
               </h3>
-              <Badge variant="secondary" className="mt-2">
-                {repo.language}
+              <Badge variant="secondary" className="mt-2 animate-pulse">
+                {repo.language || '🌈 Mixed'}
               </Badge>
             </div>
             <div className="flex space-x-2">
@@ -48,22 +51,27 @@ export function RepoCard({ repo, onBookmark }: RepoCardProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-400">{repo.description}</p>
+          <p className="text-gray-400 group-hover:text-gray-300 transition-all duration-300">{repo.description}</p>
           
           {repo.aiAnalysis && (
             <div className="mt-4 space-y-4">
               {repo.aiAnalysis.suggestions && repo.aiAnalysis.suggestions.length > 0 && (
-                <div>
-                  <h4 className="text-sm font-medium text-primary mb-2">
-                    <span role="img" aria-label="magic wand">✨</span> Cool Things You Can Do
+                <div className="relative">
+                  {/* Background glow */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-lg -z-10" />
+                  
+                  <h4 className="text-sm font-medium bg-gradient-to-r from-primary to-primary-foreground bg-clip-text text-transparent mb-2">
+                    <span role="img" aria-label="magic wand" className="animate-bounce inline-block">✨</span> Adventure Ideas
                   </h4>
                   <ul className="space-y-2">
                     {repo.aiAnalysis.suggestions.map((suggestion, i) => (
-                      <li key={i} className="text-sm text-gray-400 leading-relaxed flex items-start space-x-2">
-                        <span role="img" aria-label="bullet point" className="text-lg">
+                      <li key={i} className="text-sm text-gray-400 leading-relaxed flex items-start space-x-2 group/item hover:text-gray-300 transition-all duration-300">
+                        <span role="img" aria-label="bullet point" className="text-lg group-hover/item:scale-110 transition-transform duration-300">
                           {['🎮', '🚀', '🎨'][i]}
                         </span>
-                        <span>{typeof suggestion === 'string' ? suggestion : ''}</span>
+                        <span className="group-hover/item:translate-x-1 transition-transform duration-300">
+                          {typeof suggestion === 'string' ? suggestion : ''}
+                        </span>
                       </li>
                     ))}
                   </ul>
