@@ -321,7 +321,7 @@ Respond in this exact JSON format:
 
     // Ensure we have exactly 3 valid string suggestions
     const validSuggestions = suggestions
-      .filter((s): s is string => typeof s === 'string' && s.length > 0)
+      .filter((s: unknown): s is string => typeof s === 'string' && s.length > 0)
       .slice(0, 3);
 
     // If we don't have enough valid suggestions, add defaults
@@ -341,6 +341,11 @@ Respond in this exact JSON format:
       topKeywords: ["github", "learning", "programming"],
       domainCategory: "Educational Resources",
       trendingScore: 75,
+      insights: result.insights || {
+        trendReason: `${name} is gaining traction in the developer community`,
+        ecosystemImpact: "This repository contributes to the growing ecosystem",
+        futureOutlook: "Expected to maintain steady growth and adoption"
+      }
     };
   } catch (error) {
     console.error("Error analyzing repository:", error);
@@ -365,6 +370,11 @@ Respond in this exact JSON format:
       topKeywords: ["github", "learning", "programming"],
       domainCategory: "Educational Resources",
       trendingScore: 50,
+      insights: {
+        trendReason: `${name} shows potential for growth`,
+        ecosystemImpact: "Contributing to developer productivity",
+        futureOutlook: "Monitoring community adoption and development"
+      }
     };
   }
 }
