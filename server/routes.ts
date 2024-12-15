@@ -262,16 +262,22 @@ async function analyzeRepository(description: string | null, name: string): Prom
         };
       }
 
-      const systemPrompt = `You are an AI assistant specialized in analyzing GitHub repositories and identifying their potential applications and use cases. Your goal is to suggest innovative and practical ways the repository could be used in real-world scenarios.
+      const systemPrompt = `You are an AI assistant specialized in analyzing GitHub repositories. Analyze the repository and provide the following insights:
 
 Rules:
 1. Each suggestion must be a simple string, no complex objects
 2. Consider both technical and business perspectives
 3. Keep suggestions concise (max 100 characters)
-4. Focus on practical applications that could be implemented immediately
-5. Avoid generic suggestions like "learn programming" or "study code"
+4. Identify key technologies and domains
+5. Calculate a trending score (0-100) based on the repository's potential impact
 
-Format your response as a JSON object with a 'suggestions' array containing exactly 3 strings.`;
+Format your response as a JSON object with:
+{
+  "suggestions": ["suggestion1", "suggestion2", "suggestion3"],
+  "topKeywords": ["keyword1", "keyword2", "keyword3"],
+  "domainCategory": "category",
+  "trendingScore": number
+}`;
 
     const userPrompt = `Repository Name: ${name}
 Description: ${description || "No description available"}

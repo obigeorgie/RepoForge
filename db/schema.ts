@@ -20,7 +20,13 @@ export const repositories = pgTable("repositories", {
   stars: integer("stars").default(0),
   forks: integer("forks").default(0),
   url: text("url").notNull(),
-  aiAnalysis: jsonb("ai_analysis").$type<{ suggestions: string[], analyzedAt: string }>(),
+  aiAnalysis: jsonb("ai_analysis").$type<{
+    suggestions: string[],
+    analyzedAt: string,
+    topKeywords?: string[],
+    domainCategory?: string,
+    trendingScore?: number
+  }>(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

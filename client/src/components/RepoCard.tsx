@@ -50,16 +50,42 @@ export function RepoCard({ repo, onBookmark }: RepoCardProps) {
         <CardContent>
           <p className="text-gray-400">{repo.description}</p>
           
-          {repo.aiSuggestions && Array.isArray(repo.aiSuggestions) && repo.aiSuggestions.length > 0 && (
-            <div className="mt-4">
-              <h4 className="text-sm font-medium text-primary mb-2">AI Suggestions</h4>
-              <ul className="space-y-1">
-                {repo.aiSuggestions.map((suggestion, i) => (
-                  <li key={i} className="text-sm text-gray-400 leading-relaxed">
-                    • {typeof suggestion === 'string' ? suggestion : ''}
-                  </li>
-                ))}
-              </ul>
+          {repo.aiAnalysis && (
+            <div className="mt-4 space-y-4">
+              {repo.aiAnalysis.suggestions && repo.aiAnalysis.suggestions.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium text-primary mb-2">AI Suggestions</h4>
+                  <ul className="space-y-1">
+                    {repo.aiAnalysis.suggestions.map((suggestion, i) => (
+                      <li key={i} className="text-sm text-gray-400 leading-relaxed">
+                        • {typeof suggestion === 'string' ? suggestion : ''}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {repo.aiAnalysis.topKeywords && (
+                <div>
+                  <h4 className="text-sm font-medium text-primary mb-2">Top Keywords</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {repo.aiAnalysis.topKeywords.map((keyword, i) => (
+                      <Badge key={i} variant="secondary" className="text-xs">
+                        {keyword}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {repo.aiAnalysis.trendingScore !== undefined && (
+                <div className="flex items-center space-x-2">
+                  <h4 className="text-sm font-medium text-primary">Trending Score</h4>
+                  <Badge variant="outline" className="text-xs">
+                    {repo.aiAnalysis.trendingScore}/100
+                  </Badge>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
