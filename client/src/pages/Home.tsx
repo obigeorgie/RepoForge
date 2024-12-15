@@ -8,18 +8,20 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 
+const platforms = ["github", "gitlab", "bitbucket"] as const;
 const languages = ["All", "JavaScript", "TypeScript", "Python", "Rust", "Go", "Java", "C++"];
 const sortOptions = ["stars", "forks", "recent"];
 
 export function Home() {
   const { toast } = useToast();
+  const [selectedPlatform, setSelectedPlatform] = useState<Platform>("github");
   const [selectedLanguage, setSelectedLanguage] = useState("All");
   const [sortBy, setSortBy] = useState("stars");
   const [minStars, setMinStars] = useState("100");
 
   const { data: repos, isLoading } = useQuery({
-    queryKey: ["/api/trending", selectedLanguage, sortBy, minStars],
-    queryFn: () => getTrendingRepos(selectedLanguage, sortBy, parseInt(minStars)),
+    queryKey: ["/api/trending", selectedPlatform, selectedLanguage, sortBy, minStars],
+    queryFn: () => getTrendingRepos(selectedPlatform, selectedLanguage, sortBy, parseInt(minStars)),
   });
 
   return (
@@ -30,6 +32,19 @@ export function Home() {
         </h1>
         
         <div className="flex space-x-4 items-center">
+          <Select value={selectedPlatform} onValueChange={setSelectedPlatform}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select Platform" />
+            </SelectTrigger>
+            <SelectContent>
+              {platforms.map(platform => (
+                <SelectItem key={platform} value={platform}>
+                  {platform.charAt(0).toUpperCase() + platform.slice(1)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
           <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Select Language" />

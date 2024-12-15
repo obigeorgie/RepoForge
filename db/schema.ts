@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, jsonb, uniqueIndex, primaryKey } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
@@ -12,8 +12,9 @@ export const users = pgTable("users", {
 });
 
 export const repositories = pgTable("repositories", {
-  id: serial("id").primaryKey(),
-  githubId: text("github_id").unique().notNull(),
+  id: serial("id"),
+  platform: text("platform").notNull(),
+  platformId: text("platform_id").notNull(),
   name: text("name").notNull(),
   description: text("description"),
   language: text("language"),
@@ -25,10 +26,18 @@ export const repositories = pgTable("repositories", {
     analyzedAt: string,
     topKeywords?: string[],
     domainCategory?: string,
-    trendingScore?: number
+    trendingScore?: number,
+    insights?: {
+      trendReason: string,
+      ecosystemImpact: string,
+      futureOutlook: string
+    }
   }>(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => ({
+  pk: primaryKey([table.platform, table.platformId]),
+  idIdx: uniqueIndex('repositories_id_idx').on(table.id)
+}));
 
 export const bookmarks = pgTable("bookmarks", {
   id: serial("id").primaryKey(),
