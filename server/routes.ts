@@ -274,16 +274,19 @@ async function analyzeRepository(description: string | null, name: string): Prom
         };
       }
 
-      const systemPrompt = `You are an AI assistant specialized in analyzing GitHub repositories. Your task is to provide three simple, actionable suggestions for using this repository.
+      const systemPrompt = `You are an AI assistant specialized in analyzing GitHub repositories. Your task is to provide three practical suggestions for using or learning from this repository.
 
 Rules for suggestions:
 1. Return an array of EXACTLY 3 plain strings in the suggestions field
 2. Each suggestion must be a complete, actionable sentence
 3. Keep each suggestion under 100 characters
-4. Focus on concrete, practical ways to use the repository
-5. DO NOT return objects or nested structures
-6. BAD example: { "useCase": "...", "description": "..." }
-7. GOOD example: "Create an interactive tutorial website using this framework's components"
+4. Focus on practical learning opportunities and hands-on projects
+5. Consider the repository's purpose and target audience
+6. DO NOT return objects, only plain strings
+7. Examples of good suggestions:
+   - "Build a mini database engine following the repository's step-by-step guide"
+   - "Create your own programming language using the provided tutorials"
+   - "Practice system design by implementing a basic Docker clone"
 
 Domain Categories:
 - Web Development
@@ -310,19 +313,29 @@ Format your response as a JSON object with:
     const userPrompt = `Repository Name: ${name}
 Description: ${description || "No description available"}
 
-Analyze this repository and provide:
-1. Three practical suggestions for using or integrating this repository
-2. Key technical keywords that define its capabilities
-3. Its primary domain category
-4. A trending score based on current tech landscape
+You are analyzing a GitHub repository that appears to be: ${description || name}
+
+Your task is to suggest three practical ways developers can use this repository to improve their skills or create something valuable.
 
 Consider:
-- Modern development practices and tools
-- Integration possibilities with popular frameworks
-- Business value and problem-solving potential
-- Current technology trends and future relevance
+1. The repository's main purpose and target audience
+2. Learning opportunities it presents
+3. Possible hands-on projects
+4. Skill development potential
+5. Community engagement possibilities
 
-Format the response as specified in the system prompt.`;
+For each suggestion:
+- Make it actionable and specific
+- Focus on practical implementation
+- Keep it concise (under 100 characters)
+- Make it engaging for developers
+
+Additionally, provide:
+- Relevant technical keywords
+- Domain category
+- Trending score based on current tech landscape
+
+Format your response exactly as specified in the system prompt.`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
