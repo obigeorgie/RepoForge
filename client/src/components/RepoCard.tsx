@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Star, GitFork, Users, BookmarkPlus, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
 
-import type { Repository } from "@/lib/github";
+import type { Repository } from "@/lib/types";
 
 interface RepoCardProps {
   repo: Repository;

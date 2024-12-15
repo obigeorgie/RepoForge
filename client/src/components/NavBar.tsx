@@ -14,7 +14,7 @@ export function NavBar() {
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center space-x-4">
             <Link href="/">
-              <a className="flex items-center space-x-3 group relative">
+              <span className="flex items-center space-x-3 group relative cursor-pointer">
                 <div className="relative">
                   <div className="relative">
                     <Github className="h-8 w-8 text-gray-200 transform group-hover:scale-110 transition-all duration-300" />
@@ -34,7 +34,7 @@ export function NavBar() {
                 </div>
                 {/* Hover glow effect */}
                 <div className="absolute -inset-x-4 -inset-y-2 bg-gradient-to-r from-orange-500/5 to-yellow-500/5 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-500" />
-              </a>
+              </span>
             </Link>
             
             <div className="hidden md:block w-96">
@@ -55,19 +55,19 @@ export function NavBar() {
               <>
                 <Button variant="ghost" asChild>
                   <Link href="/bookmarks">
-                    <a className="flex items-center space-x-2">
+                    <span className="flex items-center space-x-2">
                       <BookMarked size={20} />
                       <span className="hidden md:inline">Bookmarks</span>
-                    </a>
+                    </span>
                   </Link>
                 </Button>
                 
                 <Button variant="ghost" asChild>
                   <Link href="/profile">
-                    <a className="flex items-center space-x-2">
+                    <span className="flex items-center space-x-2">
                       <User size={20} />
                       <span className="hidden md:inline">Profile</span>
-                    </a>
+                    </span>
                   </Link>
                 </Button>
               </>

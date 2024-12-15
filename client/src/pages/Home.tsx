@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { RepoCard } from "@/components/RepoCard";
-import { getTrendingRepos } from "@/lib/github";
 import { bookmarkRepo } from "@/lib/api";
-import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import type { Platform } from "@/lib/types";
+import { getPlatformClient } from "@/lib/platforms";
 
 const platforms = ["github", "gitlab", "bitbucket"] as const;
 const languages = ["All", "JavaScript", "TypeScript", "Python", "Rust", "Go", "Java", "C++"];
@@ -21,7 +21,11 @@ export function Home() {
 
   const { data: repos, isLoading } = useQuery({
     queryKey: ["/api/trending", selectedPlatform, selectedLanguage, sortBy, minStars],
-    queryFn: () => getTrendingRepos(selectedPlatform, selectedLanguage, sortBy, parseInt(minStars)),
+    queryFn: () => getPlatformClient(selectedPlatform).getTrendingRepos({
+      language: selectedLanguage,
+      sort: sortBy,
+      minStars: parseInt(minStars),
+    }),
   });
 
   return (

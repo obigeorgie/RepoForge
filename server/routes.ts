@@ -160,7 +160,7 @@ export function registerRoutes(app: Express) {
       } else if (platform === 'gitlab') {
         url.searchParams.append("order_by", "stars");
         url.searchParams.append("sort", "desc");
-        if (language && language !== "All") {
+        if (language && language !== "All" && typeof language === "string") {
           url.searchParams.append("with_programming_language", language);
         }
         url.searchParams.append("per_page", "30");

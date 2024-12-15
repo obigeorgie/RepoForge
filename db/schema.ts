@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, timestamp, jsonb, uniqueIndex, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, jsonb, uniqueIndex } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 
@@ -12,7 +12,7 @@ export const users = pgTable("users", {
 });
 
 export const repositories = pgTable("repositories", {
-  id: serial("id"),
+  id: serial("id").primaryKey(),
   platform: text("platform").notNull(),
   platformId: text("platform_id").notNull(),
   name: text("name").notNull(),
@@ -21,22 +21,39 @@ export const repositories = pgTable("repositories", {
   stars: integer("stars").default(0),
   forks: integer("forks").default(0),
   url: text("url").notNull(),
+  platformData: jsonb("platform_data").$type<{
+    github?: {
+      owner: string;
+      repo: string;
+      topics?: string[];
+      license?: string;
+    };
+    gitlab?: {
+      namespace: string;
+      projectId: number;
+      visibility?: string;
+    };
+    bitbucket?: {
+      workspace: string;
+      repo_slug: string;
+      scm?: string;
+    };
+  }>(),
   aiAnalysis: jsonb("ai_analysis").$type<{
-    suggestions: string[],
-    analyzedAt: string,
-    topKeywords?: string[],
-    domainCategory?: string,
-    trendingScore?: number,
+    suggestions: string[];
+    analyzedAt: string;
+    topKeywords?: string[];
+    domainCategory?: string;
+    trendingScore?: number;
     insights?: {
-      trendReason: string,
-      ecosystemImpact: string,
-      futureOutlook: string
-    }
+      trendReason: string;
+      ecosystemImpact: string;
+      futureOutlook: string;
+    };
   }>(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
-  pk: primaryKey([table.platform, table.platformId]),
-  idIdx: uniqueIndex('repositories_id_idx').on(table.id)
+  platformUnique: uniqueIndex('platform_unique_idx').on(table.platform, table.platformId)
 }));
 
 export const bookmarks = pgTable("bookmarks", {
@@ -76,6 +93,7 @@ export const selectRepositorySchema = createSelectSchema(repositories);
 export const insertBookmarkSchema = createInsertSchema(bookmarks);
 export const selectBookmarkSchema = createSelectSchema(bookmarks);
 
+// Types
 export type User = typeof users.$inferSelect;
 export type Repository = typeof repositories.$inferSelect;
 export type Bookmark = typeof bookmarks.$inferSelect;
