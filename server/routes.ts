@@ -6,6 +6,8 @@ import { users, repositories, bookmarks } from "@db/schema";
 import { eq, desc } from "drizzle-orm";
 import session from "express-session";
 import MemoryStore from "memorystore";
+import passport from "passport";
+import { Strategy as GitHubStrategy } from "passport-github2";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });

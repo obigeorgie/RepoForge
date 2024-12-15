@@ -57,6 +57,7 @@
     "memorystore": "^1.6.7",
     "openai": "^4.76.3",
     "passport": "^0.7.0",
+    "passport-github2": "^0.1.12",
     "passport-local": "^1.0.0",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",

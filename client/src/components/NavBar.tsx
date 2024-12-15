@@ -10,11 +10,18 @@ export function NavBar() {
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center space-x-4">
             <Link href="/">
-              <a className="flex items-center space-x-2">
-                <Github className="h-6 w-6 text-primary" />
-                <span className="text-lg font-bold bg-gradient-to-r from-primary to-primary-foreground bg-clip-text text-transparent">
-                  TrendHub AI
-                </span>
+              <a className="flex items-center space-x-2 group">
+                <div className="relative">
+                  <Github className="h-7 w-7 text-gray-200 transform group-hover:scale-105 transition-transform" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-orange-500/20 to-yellow-500/20 rounded-full blur opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xl font-bold">
+                    <span className="text-gray-200">Repo</span>
+                    <span className="bg-gradient-to-r from-orange-500 to-yellow-500 bg-clip-text text-transparent">Forge</span>
+                  </span>
+                  <span className="text-xs text-gray-400">Forge the future with trending repositories</span>
+                </div>
               </a>
             </Link>
             
