@@ -176,11 +176,11 @@ async function analyzeRepository(description: string, name: string) {
       messages: [
         {
           role: "system",
-          content: "You are an AI assistant that analyzes GitHub repositories and suggests potential use cases. Provide 3 concise suggestions in JSON format with a 'suggestions' array.",
+          content: "You are an AI assistant that analyzes GitHub repositories and suggests potential use cases. Provide 3 concise suggestions as simple strings in a JSON array format.",
         },
         {
           role: "user",
-          content: `Repository name: ${name}\nDescription: ${description}\n\nProvide 3 potential use cases for this repository. Return them in JSON format with a 'suggestions' array.`,
+          content: `Repository name: ${name}\nDescription: ${description}\n\nProvide 3 potential use cases for this repository as simple strings. Format: {"suggestions": ["suggestion1", "suggestion2", "suggestion3"]}`,
         },
       ],
       response_format: { type: "json_object" },
