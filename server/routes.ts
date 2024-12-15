@@ -266,6 +266,67 @@ export function registerRoutes(app: Express) {
     }
   });
 
+  // Code playground endpoint
+  app.post("/api/playground/execute", async (req, res) => {
+    try {
+      const { code, language } = req.body;
+      
+      if (!code || !language) {
+        return res.status(400).json({ 
+          error: "Missing required fields: code and language" 
+        });
+      }
+
+      // Execute code based on language
+      let output = "";
+      
+      if (language === "javascript" || language === "typescript") {
+        try {
+          // Use VM to safely execute JS/TS code
+          const vm = require('vm');
+          const context = { console: { log: (...args) => output += args.join(' ') + '\n' } };
+          vm.createContext(context);
+          vm.runInContext(code, context, { timeout: 5000 });
+        } catch (err) {
+          output = `Error: ${err.message}`;
+        }
+      } else if (language === "python") {
+        try {
+          // Use python-shell to safely execute Python code
+          const { PythonShell } = require('python-shell');
+          const options = {
+            mode: 'text',
+            pythonPath: 'python3',
+            pythonOptions: ['-u'],
+          };
+          
+          const result = await new Promise((resolve, reject) => {
+            PythonShell.runString(code, options, (err, results) => {
+              if (err) reject(err);
+              resolve(results?.join('\n') || '');
+            });
+          });
+          
+          output = result;
+        } catch (err) {
+          output = `Error: ${err.message}`;
+        }
+      } else {
+        return res.status(400).json({
+          error: "Unsupported language. Supported languages: javascript, typescript, python"
+        });
+      }
+
+      res.json({ output });
+    } catch (error) {
+      console.error("Code execution error:", error);
+      res.status(500).json({ 
+        error: "Failed to execute code",
+        details: error.message 
+      });
+    }
+  });
+
   return httpServer;
 }
 

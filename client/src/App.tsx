@@ -2,6 +2,7 @@ import { Switch, Route } from "wouter";
 import { NavBar } from "@/components/NavBar";
 import { Home } from "@/pages/Home";
 import { Profile } from "@/pages/Profile";
+import { Playground } from "@/pages/Playground";
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
 
@@ -12,6 +13,7 @@ function App() {
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/profile" component={Profile} />
+        <Route path="/playground" component={Playground} />
         <Route component={NotFound} />
       </Switch>
     </div>
