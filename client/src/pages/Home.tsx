@@ -8,15 +8,18 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 
-const languages = ["All", "JavaScript", "TypeScript", "Python", "Rust", "Go"];
+const languages = ["All", "JavaScript", "TypeScript", "Python", "Rust", "Go", "Java", "C++"];
+const sortOptions = ["stars", "forks", "recent"];
 
 export function Home() {
   const { toast } = useToast();
   const [selectedLanguage, setSelectedLanguage] = useState("All");
+  const [sortBy, setSortBy] = useState("stars");
+  const [minStars, setMinStars] = useState("100");
 
   const { data: repos, isLoading } = useQuery({
-    queryKey: ["/api/trending", selectedLanguage],
-    queryFn: () => getTrendingRepos(selectedLanguage),
+    queryKey: ["/api/trending", selectedLanguage, sortBy, minStars],
+    queryFn: () => getTrendingRepos(selectedLanguage, sortBy, parseInt(minStars)),
   });
 
   return (
@@ -34,6 +37,32 @@ export function Home() {
             <SelectContent>
               {languages.map(lang => (
                 <SelectItem key={lang} value={lang}>{lang}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              {sortOptions.map(option => (
+                <SelectItem key={option} value={option}>
+                  {option.charAt(0).toUpperCase() + option.slice(1)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={minStars} onValueChange={setMinStars}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Minimum Stars" />
+            </SelectTrigger>
+            <SelectContent>
+              {["100", "1000", "5000", "10000", "50000"].map(stars => (
+                <SelectItem key={stars} value={stars}>
+                  {stars}+ stars
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
