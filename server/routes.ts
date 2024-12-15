@@ -32,9 +32,84 @@ export function registerRoutes(app: Express) {
       }),
       resave: false,
       saveUninitialized: false,
-      secret: 'your-secret-key'
+      secret: process.env.SESSION_SECRET || 'your-secret-key'
     })
   );
+
+  // Initialize Passport and restore authentication state from session
+  app.use(passport.initialize());
+  app.use(passport.session());
+
+  // Serialize user for the session
+  passport.serializeUser((user: any, done) => {
+    done(null, user.id);
+  });
+
+  // Deserialize user from the session
+  passport.deserializeUser(async (id: number, done) => {
+    try {
+      const user = await db.query.users.findFirst({
+        where: eq(users.id, id),
+      });
+      done(null, user);
+    } catch (error) {
+      done(error);
+    }
+  });
+
+  // Setup GitHub authentication strategy
+  passport.use(
+    new GitHubStrategy(
+      {
+        clientID: process.env.GITHUB_CLIENT_ID!,
+        clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+        callbackURL: "http://localhost:5000/api/auth/github/callback",
+      },
+      async (accessToken: string, refreshToken: string, profile: any, done: any) => {
+        try {
+          let user = await db.query.users.findFirst({
+            where: eq(users.githubId, profile.id.toString()),
+          });
+
+          if (!user) {
+            const [newUser] = await db
+              .insert(users)
+              .values({
+                username: profile.username,
+                githubId: profile.id.toString(),
+                avatar: profile.photos?.[0]?.value,
+                bio: profile._json.bio,
+              })
+              .returning();
+            user = newUser;
+          }
+
+          return done(null, user);
+        } catch (error) {
+          return done(error);
+        }
+      }
+    )
+  );
+
+  // GitHub authentication routes
+  app.get("/api/auth/github", passport.authenticate("github", { scope: ["user:email"] }));
+
+  app.get(
+    "/api/auth/github/callback",
+    passport.authenticate("github", { failureRedirect: "/login" }),
+    (req, res) => {
+      res.redirect("/");
+    }
+  );
+
+  // Get user profile
+  app.get("/api/me", (req, res) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    res.json(req.user);
+  });
 
   // Get trending repositories
   app.get("/api/trending", async (req, res) => {
