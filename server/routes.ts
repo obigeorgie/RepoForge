@@ -144,6 +144,7 @@ export function registerRoutes(app: Express) {
 
       const data = await response.json();
       console.log('GitHub API Response:', data.items[0]); // Log first item
+      console.log('Processing repositories with AI analysis...');
       
       // Process each repository
       const repos = await Promise.all(data.items.map(async (item: any) => {
@@ -156,7 +157,11 @@ export function registerRoutes(app: Express) {
         if (!repo) {
           console.log(`Getting AI analysis for: ${item.full_name}`);
           const aiAnalysis = await analyzeRepository(item.description, item.full_name);
-          console.log('AI Analysis result:', aiAnalysis);
+          console.log('AI Analysis result for', item.full_name, ':', {
+            suggestions: aiAnalysis.suggestions,
+            insights: aiAnalysis.insights,
+            trendingScore: aiAnalysis.trendingScore
+          });
           
           const [newRepo] = await db
             .insert(repositories)

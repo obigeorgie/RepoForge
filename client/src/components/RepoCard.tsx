@@ -90,6 +90,17 @@ export function RepoCard({ repo, onBookmark }: RepoCardProps) {
                 </ul>
               </div>
               
+              {/* Debug Info */}
+              <div className="mt-4 p-2 border border-red-500 hidden">
+                <pre className="text-xs">
+                  {JSON.stringify({
+                    hasAnalysis: !!repo.aiAnalysis,
+                    hasInsights: !!repo.aiAnalysis?.insights,
+                    insights: repo.aiAnalysis?.insights
+                  }, null, 2)}
+                </pre>
+              </div>
+              
               {repo.aiAnalysis && repo.aiAnalysis.insights && (
                 <div className="mt-4 space-y-3">
                   <div className="bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 rounded-lg p-4 backdrop-blur-sm">
