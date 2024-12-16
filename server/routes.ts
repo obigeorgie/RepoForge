@@ -114,11 +114,23 @@ export function registerRoutes(app: Express) {
   app.get("/api/trending", async (req, res) => {
     try {
       const { language } = req.query;
+      
+      // Validate language parameter if provided
+      if (language && typeof language !== 'string') {
+        return res.status(400).json({ message: "Invalid language parameter" });
+      }
+      
+      // Check GitHub token
+      if (!process.env.GITHUB_TOKEN) {
+        console.error('Missing GitHub token');
+        return res.status(503).json({ message: "GitHub API service unavailable" });
+      }
+
       const url = new URL("https://api.github.com/search/repositories");
       
       let q = "stars:>100";
       if (language && language !== "All") {
-        q += ` language:${language}`;
+        q += ` language:${encodeURIComponent(language)}`;
       }
       
       url.searchParams.append("q", q);
