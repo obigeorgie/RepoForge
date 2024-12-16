@@ -262,24 +262,46 @@ export function registerRoutes(app: Express) {
 
   app.post("/api/bookmarks", async (req, res) => {
     try {
+      // Authentication check
       const userId = req.session?.userId;
       if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
+        console.log('Unauthorized bookmark attempt - no user session');
+        return res.status(401).json({ 
+          message: "Please log in to bookmark repositories",
+          code: "AUTH_REQUIRED"
+        });
       }
 
+      // Input validation
       const { repoId } = req.body;
-      if (!repoId || typeof repoId !== 'number') {
-        return res.status(400).json({ message: "Invalid repository ID" });
+      if (repoId === undefined || repoId === null) {
+        return res.status(400).json({ 
+          message: "Repository ID is required",
+          code: "MISSING_REPO_ID"
+        });
       }
 
+      if (typeof repoId !== 'number' || !Number.isInteger(repoId) || repoId <= 0) {
+        return res.status(400).json({ 
+          message: "Invalid repository ID format",
+          code: "INVALID_REPO_ID"
+        });
+      }
+
+      // Check if repository exists
       const repository = await db.query.repositories.findFirst({
         where: eq(repositories.id, repoId),
       });
 
       if (!repository) {
-        return res.status(404).json({ message: "Repository not found" });
+        console.log(`Repository not found - ID: ${repoId}`);
+        return res.status(404).json({ 
+          message: "Repository not found",
+          code: "REPO_NOT_FOUND"
+        });
       }
 
+      // Check for existing bookmark
       const existingBookmark = await db.query.bookmarks.findFirst({
         where: and(
           eq(bookmarks.userId, userId),
@@ -288,9 +310,13 @@ export function registerRoutes(app: Express) {
       });
 
       if (existingBookmark) {
-        return res.status(409).json({ message: "Bookmark already exists" });
+        return res.status(409).json({ 
+          message: "You have already bookmarked this repository",
+          code: "DUPLICATE_BOOKMARK"
+        });
       }
 
+      // Create bookmark
       const [bookmark] = await db
         .insert(bookmarks)
         .values({
@@ -299,17 +325,34 @@ export function registerRoutes(app: Express) {
         })
         .returning();
 
-      res.json(bookmark);
+      console.log(`Bookmark created - User: ${userId}, Repo: ${repoId}`);
+      res.json({
+        message: "Repository bookmarked successfully",
+        data: bookmark
+      });
     } catch (error) {
-      console.error("Error creating bookmark:", error);
-      if (error instanceof Error) {
-        console.error({
+      console.error("Error creating bookmark:", {
+        error: error instanceof Error ? {
           type: error.name,
           message: error.message,
           stack: error.stack
+        } : error,
+        userId: req.session?.userId,
+        repoId: req.body?.repoId
+      });
+
+      // Database-specific error handling
+      if (error instanceof Error && error.message.includes('foreign key constraint')) {
+        return res.status(400).json({ 
+          message: "Invalid user or repository reference",
+          code: "REFERENCE_ERROR"
         });
       }
-      res.status(500).json({ message: "Failed to create bookmark" });
+
+      res.status(500).json({ 
+        message: "Failed to create bookmark. Please try again later.",
+        code: "INTERNAL_ERROR"
+      });
     }
   });
 
