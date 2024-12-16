@@ -1,4 +1,4 @@
-import type { Express, Request } from "express";
+import type { Express } from "express";
 import { createServer } from "http";
 import OpenAI from "openai";
 import { db } from "@db";
@@ -25,7 +25,6 @@ const MemoryStoreSession = MemoryStore(session);
 export function registerRoutes(app: Express) {
   const httpServer = createServer(app);
 
-  // Setup session middleware
   app.use(
     session({
       cookie: { maxAge: 86400000 },
@@ -101,10 +100,15 @@ export function registerRoutes(app: Express) {
   );
 
   app.get("/api/me", (req, res) => {
-    if (!req.user) {
-      return res.status(401).json({ message: "Unauthorized" });
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      res.json(req.user);
+    } catch (error) {
+      console.error('Error in /api/me:', error);
+      res.status(500).json({ message: "Internal server error" });
     }
-    res.json(req.user);
   });
 
   app.get("/api/trending", async (req, res) => {
@@ -187,6 +191,7 @@ export function registerRoutes(app: Express) {
                 topKeywords: aiAnalysis.topKeywords,
                 domainCategory: aiAnalysis.domainCategory,
                 trendingScore: aiAnalysis.trendingScore,
+                insights: aiAnalysis.insights
               },
             })
             .returning();
@@ -202,13 +207,7 @@ export function registerRoutes(app: Express) {
           stars: repo.stars,
           forks: repo.forks,
           url: repo.url,
-          aiAnalysis: repo.aiAnalysis ? {
-            suggestions: repo.aiAnalysis.suggestions,
-            analyzedAt: repo.aiAnalysis.analyzedAt,
-            topKeywords: repo.aiAnalysis.topKeywords || [],
-            domainCategory: repo.aiAnalysis.domainCategory || "Unknown",
-            trendingScore: repo.aiAnalysis.trendingScore || 50,
-          } : undefined,
+          aiAnalysis: repo.aiAnalysis,
         };
       }));
 
@@ -241,7 +240,7 @@ export function registerRoutes(app: Express) {
         stars: b.repository.stars,
         forks: b.repository.forks,
         url: b.repository.url,
-        aiSuggestions: b.repository.aiAnalysis?.suggestions,
+        aiAnalysis: b.repository.aiAnalysis,
       })));
     } catch (error) {
       console.error("Error fetching bookmarks:", error);
@@ -257,7 +256,29 @@ export function registerRoutes(app: Express) {
       }
 
       const { repoId } = req.body;
-      
+      if (!repoId || typeof repoId !== 'number') {
+        return res.status(400).json({ message: "Invalid repository ID" });
+      }
+
+      const repository = await db.query.repositories.findFirst({
+        where: eq(repositories.id, repoId),
+      });
+
+      if (!repository) {
+        return res.status(404).json({ message: "Repository not found" });
+      }
+
+      const existingBookmark = await db.query.bookmarks.findFirst({
+        where: and(
+          eq(bookmarks.userId, userId),
+          eq(bookmarks.repositoryId, repoId)
+        ),
+      });
+
+      if (existingBookmark) {
+        return res.status(409).json({ message: "Bookmark already exists" });
+      }
+
       const [bookmark] = await db
         .insert(bookmarks)
         .values({
@@ -269,6 +290,13 @@ export function registerRoutes(app: Express) {
       res.json(bookmark);
     } catch (error) {
       console.error("Error creating bookmark:", error);
+      if (error instanceof Error) {
+        console.error({
+          type: error.name,
+          message: error.message,
+          stack: error.stack
+        });
+      }
       res.status(500).json({ message: "Failed to create bookmark" });
     }
   });
@@ -400,7 +428,6 @@ Respond in this exact JSON format:
       });
     }
 
-    // Return a safe fallback response
     return {
       suggestions: [
         `Study the codebase of ${name} to understand its architecture`,
