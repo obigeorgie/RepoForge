@@ -9,7 +9,6 @@ import MemoryStore from "memorystore";
 import passport from "passport";
 import { Strategy as GitHubStrategy } from "passport-github2";
 
-// the newest OpenAI model is "gpt-4o" which was released May 13, 2024
 if (!process.env.OPENAI_API_KEY) {
   throw new Error("OPENAI_API_KEY environment variable is required");
 }
@@ -39,16 +38,13 @@ export function registerRoutes(app: Express) {
     })
   );
 
-  // Initialize Passport and restore authentication state from session
   app.use(passport.initialize());
   app.use(passport.session());
 
-  // Serialize user for the session
   passport.serializeUser((user: any, done) => {
     done(null, user.id);
   });
 
-  // Deserialize user from the session
   passport.deserializeUser(async (id: number, done) => {
     try {
       const user = await db.query.users.findFirst({
@@ -60,13 +56,12 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  // Setup GitHub authentication strategy
   passport.use(
     new GitHubStrategy(
       {
         clientID: process.env.GITHUB_CLIENT_ID!,
         clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-        callbackURL: "http://localhost:5000/api/auth/github/callback",
+        callbackURL: `${process.env.APP_URL || 'http://localhost:5000'}/api/auth/github/callback`,
       },
       async (accessToken: string, refreshToken: string, profile: any, done: any) => {
         try {
@@ -95,7 +90,6 @@ export function registerRoutes(app: Express) {
     )
   );
 
-  // GitHub authentication routes
   app.get("/api/auth/github", passport.authenticate("github", { scope: ["user:email"] }));
 
   app.get(
@@ -106,7 +100,6 @@ export function registerRoutes(app: Express) {
     }
   );
 
-  // Get user profile
   app.get("/api/me", (req, res) => {
     if (!req.user) {
       return res.status(401).json({ message: "Unauthorized" });
@@ -114,7 +107,6 @@ export function registerRoutes(app: Express) {
     res.json(req.user);
   });
 
-  // Get trending repositories
   app.get("/api/trending", async (req, res) => {
     try {
       const { language } = req.query;
@@ -138,17 +130,34 @@ export function registerRoutes(app: Express) {
       const response = await fetch(url.toString(), { headers });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch from GitHub API");
+        const error = await response.text();
+        console.error('GitHub API Error:', {
+          status: response.status,
+          statusText: response.statusText,
+          error
+        });
+        
+        if (response.status === 403) {
+          throw new Error("GitHub API rate limit exceeded. Please try again later.");
+        } else if (response.status === 401) {
+          throw new Error("Unauthorized access to GitHub API. Please check your token.");
+        } else {
+          throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
+        }
       }
 
       const data = await response.json();
+      
+      if (!data.items || !Array.isArray(data.items)) {
+        console.error('Invalid GitHub API response:', data);
+        throw new Error("Invalid response format from GitHub API");
+      }
+      
       console.log('Processing repositories with AI analysis...');
       
-      // Process each repository
       const repos = await Promise.all(data.items.map(async (item: any) => {
         console.log(`Processing repository: ${item.full_name}`);
         
-        // Get or create repository in database
         let repo = await db.query.repositories.findFirst({
           where: eq(repositories.githubId, item.id.toString()),
         });
@@ -210,7 +219,6 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  // Get user's bookmarks
   app.get("/api/bookmarks", async (req, res) => {
     try {
       const userId = req.session?.userId;
@@ -241,7 +249,6 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  // Create bookmark
   app.post("/api/bookmarks", async (req, res) => {
     try {
       const userId = req.session?.userId;
@@ -266,22 +273,20 @@ export function registerRoutes(app: Express) {
     }
   });
 
-  
-
   return httpServer;
 }
 
-async function analyzeRepository(description: string | null, name: string): Promise<{ 
-  suggestions: string[], 
-  analyzedAt: string, 
-  topKeywords: string[], 
-  domainCategory: string, 
-  trendingScore: number,
+async function analyzeRepository(description: string | null, name: string): Promise<{
+  suggestions: string[];
+  analyzedAt: string;
+  topKeywords: string[];
+  domainCategory: string;
+  trendingScore: number;
   insights: {
-    trendReason: string,
-    ecosystemImpact: string,
-    futureOutlook: string
-  }
+    trendReason: string;
+    ecosystemImpact: string;
+    futureOutlook: string;
+  };
 }> {
   try {
     const systemPrompt = `You are an AI assistant analyzing GitHub repositories. Given this repository: "${name}" with description: "${description || 'No description'}", analyze its impact and provide insights.
@@ -294,11 +299,7 @@ Remember to:
 
 Respond in this exact JSON format:
 {
-  "suggestions": [
-    "Build X by following the tutorial",
-    "Create Y using the examples",
-    "Learn Z by implementing features"
-  ],
+  "suggestions": ["suggestion1", "suggestion2", "suggestion3"],
   "insights": {
     "trendReason": "Brief explanation of why this repo is trending",
     "ecosystemImpact": "How this affects the developer ecosystem",
@@ -307,78 +308,105 @@ Respond in this exact JSON format:
 }`;
 
     console.log('Calling OpenAI API for repository:', name);
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024
-      messages: [{ role: "system", content: systemPrompt }],
-      response_format: { type: "json_object" },
-      temperature: 0.7,
-      max_tokens: 500
-    });
-
-    const content = response.choices[0].message.content;
-    console.log('OpenAI API response:', content);
-
-    if (!content) {
-      throw new Error("Empty response from OpenAI");
+    let retries = 3;
+    let response = null;
+    
+    while (retries > 0) {
+      try {
+        response = await openai.chat.completions.create({
+          model: "gpt-4",
+          messages: [{ role: "system", content: systemPrompt }],
+          response_format: { type: "json_object" },
+          temperature: 0.7,
+          max_tokens: 500
+        });
+        break;
+      } catch (error: any) {
+        console.error('OpenAI API error:', error);
+        retries--;
+        
+        if (error?.response?.status === 429) {
+          const retryAfter = parseInt(error.response.headers?.['retry-after'] || '60', 10);
+          await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+          continue;
+        }
+        
+        if (retries === 0) {
+          throw new Error(`OpenAI API error: ${error.message}`);
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
     }
 
-    const result = JSON.parse(content);
-    const suggestions = Array.isArray(result.suggestions) ? result.suggestions : [];
-    const insights = result.insights || {};
+    if (!response?.choices?.[0]?.message?.content) {
+      throw new Error("Invalid or empty response from OpenAI API");
+    }
 
-    // Ensure we have exactly 3 valid string suggestions
-    const validSuggestions = suggestions
-      .filter((s: unknown): s is string => typeof s === 'string' && s.length > 0)
-      .slice(0, 3);
+    const content = response.choices[0].message.content;
+    let result;
+    
+    try {
+      result = JSON.parse(content);
+    } catch (error) {
+      console.error('Failed to parse OpenAI response:', content);
+      throw new Error('Invalid JSON response from OpenAI API');
+    }
 
-    // If we don't have enough valid suggestions, add defaults
-    while (validSuggestions.length < 3) {
-      validSuggestions.push(
-        validSuggestions.length === 0 
-          ? `Explore ${name} through hands-on coding exercises`
-          : validSuggestions.length === 1
-          ? `Build a project using ${name}'s features`
-          : `Share your learnings from ${name} with the community`
+    const suggestions = Array.isArray(result.suggestions) 
+      ? result.suggestions.filter((s: unknown): s is string => typeof s === 'string' && s.length > 0)
+      : [];
+
+    while (suggestions.length < 3) {
+      suggestions.push(
+        suggestions.length === 0
+          ? `Study the codebase of ${name} to understand its architecture`
+          : suggestions.length === 1
+          ? `Implement features in ${name} to practice contributing`
+          : `Write tests for ${name} to learn testing practices`
       );
     }
 
-    // Ensure insights are properly structured
-    const validInsights = {
-      trendReason: insights.trendReason || `${name} is gaining traction in the developer community`,
-      ecosystemImpact: insights.ecosystemImpact || "This repository contributes to the growing ecosystem",
-      futureOutlook: insights.futureOutlook || "Expected to maintain steady growth and adoption"
+    const insights = {
+      trendReason: typeof result.insights?.trendReason === 'string' 
+        ? result.insights.trendReason 
+        : `${name} is gaining traction in the developer community`,
+      ecosystemImpact: typeof result.insights?.ecosystemImpact === 'string'
+        ? result.insights.ecosystemImpact
+        : "Contributing to developer productivity",
+      futureOutlook: typeof result.insights?.futureOutlook === 'string'
+        ? result.insights.futureOutlook
+        : "Expected to maintain steady growth and adoption"
     };
 
     const analysisResult = {
-      suggestions: validSuggestions,
+      suggestions: suggestions.slice(0, 3),
       analyzedAt: new Date().toISOString(),
       topKeywords: ["github", "learning", "programming"],
       domainCategory: "Educational Resources",
       trendingScore: 75,
-      insights: validInsights
+      insights
     };
 
-    console.log('Analysis result for', name, ':', JSON.stringify(analysisResult, null, 2));
     return analysisResult;
   } catch (error) {
     console.error("Error analyzing repository:", error);
     
-    // Log detailed error information
     if (error instanceof Error) {
-      console.error("Error type:", error.name);
-      console.error("Error message:", error.message);
-      console.error("Error stack:", error.stack);
+      console.error({
+        type: error.name,
+        message: error.message,
+        stack: error.stack
+      });
     }
 
-    // Create context-aware default suggestions
-    const defaultSuggestions = [
-      `Study the codebase of ${name} to understand its architecture`,
-      `Implement a small feature in ${name} to practice contributing`,
-      `Write tests for ${name} to learn testing practices`
-    ];
-    
+    // Return a safe fallback response
     return {
-      suggestions: defaultSuggestions,
+      suggestions: [
+        `Study the codebase of ${name} to understand its architecture`,
+        `Implement a small feature in ${name} to practice contributing`,
+        `Write tests for ${name} to learn testing practices`
+      ],
       analyzedAt: new Date().toISOString(),
       topKeywords: ["github", "learning", "programming"],
       domainCategory: "Educational Resources",
