@@ -359,7 +359,7 @@ export function registerRoutes(app: Express) {
   return httpServer;
 }
 
-async function analyzeRepository(description: string | null, name: string): Promise<{
+interface AnalysisResult {
   suggestions: string[];
   analyzedAt: string;
   topKeywords: string[];
@@ -370,7 +370,9 @@ async function analyzeRepository(description: string | null, name: string): Prom
     ecosystemImpact: string;
     futureOutlook: string;
   };
-}> {
+}
+
+async function analyzeRepository(description: string | null, name: string): Promise<AnalysisResult> {
   try {
     const systemPrompt = `You are an AI assistant analyzing GitHub repositories. Given this repository: "${name}" with description: "${description || 'No description'}", analyze its impact and provide insights.
 
@@ -405,20 +407,40 @@ Respond in this exact JSON format:
         });
         break;
       } catch (error: any) {
-        console.error('OpenAI API error:', error);
+        console.error('OpenAI API error:', {
+          type: error.name,
+          message: error.message,
+          status: error?.response?.status,
+          headers: error?.response?.headers,
+        });
+        
         retries--;
         
+        // Handle rate limiting with exponential backoff
         if (error?.response?.status === 429) {
           const retryAfter = parseInt(error.response.headers?.['retry-after'] || '60', 10);
-          await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+          const backoffTime = Math.min(retryAfter * 1000 * Math.pow(2, 3 - retries), 300000); // Max 5 minutes
+          console.log(`Rate limited. Waiting ${backoffTime/1000} seconds before retry...`);
+          await new Promise(resolve => setTimeout(resolve, backoffTime));
           continue;
         }
         
-        if (retries === 0) {
-          throw new Error(`OpenAI API error: ${error.message}`);
+        // Handle other specific OpenAI errors
+        if (error?.response?.status === 401) {
+          throw new Error("Invalid OpenAI API key. Please check your configuration.");
         }
         
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        if (error?.response?.status === 400) {
+          throw new Error("Invalid request to OpenAI API. Please check the input parameters.");
+        }
+        
+        if (retries === 0) {
+          throw new Error(`OpenAI API error (${error?.response?.status || 'unknown'}): ${error.message}`);
+        }
+        
+        // Exponential backoff for other errors
+        const backoffTime = Math.min(1000 * Math.pow(2, 3 - retries), 10000); // Max 10 seconds
+        await new Promise(resolve => setTimeout(resolve, backoffTime));
       }
     }
 
