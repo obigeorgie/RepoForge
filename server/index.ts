@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
@@ -92,7 +93,7 @@ function errorHandler(err: Error, _req: Request, res: Response, _next: NextFunct
     }
 
     // Start server
-    const PORT = 5000;
+    const PORT = 5001;
     server.listen(PORT, "0.0.0.0", () => {
       log(`Server listening on port ${PORT}`);
     });

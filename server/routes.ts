@@ -121,10 +121,15 @@ export function registerRoutes(app: Express) {
       }
       
       // Check GitHub token
-      if (!process.env.GITHUB_TOKEN) {
-        console.error('Missing GitHub token');
-        return res.status(503).json({ message: "GitHub API service unavailable" });
-      }
+console.log('Environment variables:', {
+  GITHUB_TOKEN: process.env.GITHUB_TOKEN ? '*****' : 'MISSING',
+  NODE_ENV: process.env.NODE_ENV
+});
+
+if (!process.env.GITHUB_TOKEN) {
+  console.error('Missing GitHub token');
+  return res.status(503).json({ message: "GitHub API service unavailable" });
+}
 
       const url = new URL("https://api.github.com/search/repositories");
       
