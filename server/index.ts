@@ -1,11 +1,13 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { DatabaseError } from "@db";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Request logging middleware
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -36,41 +38,66 @@ app.use((req, res, next) => {
   next();
 });
 
-(async () => {
-  const server = registerRoutes(app);
-
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-
-    // Log the error for debugging
-    console.error('Error:', {
-      status,
-      message,
-      stack: err.stack,
-      name: err.name
-    });
-
-    // Send error response but don't throw
-    res.status(status).json({ 
-      message,
-      ...(app.get('env') === 'development' ? { stack: err.stack } : {})
-    });
+// Error handling middleware after routes
+function errorHandler(err: Error, _req: Request, res: Response, _next: NextFunction) {
+  console.error('Error:', {
+    name: err.name,
+    message: err.message,
+    stack: err.stack,
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
+  // Handle specific error types
+  if (err instanceof DatabaseError) {
+    return res.status(503).json({
+      error: 'Database Error',
+      message: err.message,
+      code: 'DATABASE_ERROR',
+    });
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client
-  const PORT = 5000;
-  server.listen(PORT, "0.0.0.0", () => {
-    log(`serving on port ${PORT}`);
+  // Handle validation errors (e.g., from Zod)
+  if (err.name === 'ZodError') {
+    return res.status(400).json({
+      error: 'Validation Error',
+      message: 'Invalid request data',
+      details: err.message,
+      code: 'VALIDATION_ERROR',
+    });
+  }
+
+  // Default error response
+  const status = 'status' in err ? Number(err.status) || 500 : 500;
+  const message = err.message || 'Internal Server Error';
+
+  res.status(status).json({
+    error: err.name || 'Error',
+    message: message,
+    ...(app.get('env') === 'development' ? { stack: err.stack } : {}),
+    code: 'INTERNAL_ERROR',
   });
+}
+
+(async () => {
+  try {
+    const server = registerRoutes(app);
+
+    // Add error handling middleware
+    app.use(errorHandler);
+
+    // Setup vite or serve static files
+    if (app.get("env") === "development") {
+      await setupVite(app, server);
+    } else {
+      serveStatic(app);
+    }
+
+    // Start server
+    const PORT = 5000;
+    server.listen(PORT, "0.0.0.0", () => {
+      log(`Server listening on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
 })();
